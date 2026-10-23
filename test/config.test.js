@@ -1,33 +1,79 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeConfig, DEFAULT_CONFIG } from '../src/config.js';
+import { DEFAULT_CONFIG, normalizeConfig, parseFeedUrl } from '../src/config.js';
 
-test('normalizeConfig returns the defaults when called with no argument', () => {
-  assert.deepEqual(normalizeConfig(), DEFAULT_CONFIG);
+test('the defaults give no feed, a radius of 50 km, 10 minutes, French', () => {
+  const config = normalizeConfig(DEFAULT_CONFIG);
+  assert.deepEqual(config.feeds, []);
+  assert.deepEqual(config.invalid, []);
+  assert.equal(config.refreshMinutes, 10);
+  assert.equal(config.maxAgeHours, 0);
+  assert.equal(config.language, 'fr');
+  assert.equal(config.center, null);
+  assert.equal(normalizeConfig({ feed_2_url: 'https://a.example/f' }).feeds[0].radiusKm, 50);
 });
 
-test('normalizeConfig keeps user values over the defaults', () => {
-  const config = normalizeConfig({ latitude: 45.5, longitude: -73.6, unit: 'fahrenheit' });
-  assert.equal(config.latitude, 45.5);
-  assert.equal(config.longitude, -73.6);
-  assert.equal(config.unit, 'fahrenheit');
+test('a slot with an address is a feed; its filters are parsed', () => {
+  const config = normalizeConfig({
+    feed_3_url: ' https://a.example/f.json ',
+    feed_3_name: ' Fires ',
+    feed_3_radius: '25',
+    feed_3_categories: 'Emergency, watch AND act;;',
+    feed_3_property: 'mag',
+    feed_3_min_value: '4,5',
+  });
+  assert.deepEqual(config.feeds, [
+    {
+      slot: 3,
+      url: 'https://a.example/f.json',
+      typed: true,
+      name: 'Fires',
+      radiusKm: 25,
+      categories: ['emergency', 'watch and act'],
+      property: 'mag',
+      minValue: 4.5,
+      problems: [],
+    },
+  ]);
 });
 
-test('normalizeConfig coerces numeric strings coming from a form', () => {
-  const config = normalizeConfig({ latitude: '48.8', longitude: '2.3', poll_frequency: '600' });
-  assert.equal(config.latitude, 48.8);
-  assert.equal(config.longitude, 2.3);
-  assert.equal(config.poll_frequency, 600);
-  assert.equal(typeof config.poll_frequency, 'number');
+test('unusable values are reported, and filter nothing', () => {
+  const config = normalizeConfig({
+    feed_1_url: 'ftp://a.example/f',
+    feed_2_url: 'https://a.example/f',
+    feed_2_property: 'two words',
+    feed_2_min_value: 'four',
+    feed_2_radius: '42',
+  });
+  assert.deepEqual(
+    config.invalid.map((feed) => [feed.slot, feed.problems]),
+    [
+      [1, ['url']],
+      [2, ['property', 'min_value']],
+    ],
+  );
+  assert.equal(config.feeds.length, 1);
+  assert.equal(config.feeds[0].property, null);
+  assert.equal(config.feeds[0].minValue, null);
+  assert.equal(config.feeds[0].radiusKm, 50);
 });
 
-test('normalizeConfig falls back to the default for a missing numeric field', () => {
-  const config = normalizeConfig({ unit: 'celsius' });
-  assert.equal(config.poll_frequency, DEFAULT_CONFIG.poll_frequency);
+test('feed addresses: http and https only', () => {
+  assert.equal(parseFeedUrl('http://a.example/x'), 'http://a.example/x');
+  assert.equal(parseFeedUrl('file:///etc/passwd'), null);
+  assert.equal(parseFeedUrl('javascript:alert(1)'), null);
+  assert.equal(parseFeedUrl('not a url'), null);
+  assert.equal(parseFeedUrl('https://user:pass@a.example/x'), null);
+  assert.equal(parseFeedUrl(''), null);
 });
 
-test('GLADYS_PREFER_LOCAL defaults to true and only an explicit false disables it', () => {
-  assert.equal(normalizeConfig().GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: true }).GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: false }).GLADYS_PREFER_LOCAL, false);
+test('coordinates: both or none, decimal comma accepted', () => {
+  assert.deepEqual(normalizeConfig({ latitude: '43,6', longitude: '1.44' }).center, {
+    latitude: 43.6,
+    longitude: 1.44,
+  });
+  const half = normalizeConfig({ latitude: '43.6', longitude: '' });
+  assert.equal(half.center, null);
+  assert.equal(half.invalidCenter, true);
+  assert.equal(normalizeConfig({ latitude: '95', longitude: '1' }).center, null);
 });

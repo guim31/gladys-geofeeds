@@ -28,8 +28,14 @@ Gladys before reporting a problem.
 
 ## Scope
 
-In scope: the code of this repository and the Docker image it publishes.
+In scope: the code of this repository and the Docker image it publishes. The
+integration reads the feed addresses typed in its configuration (http or
+https, 5 MB at most, nothing of a feed is ever run; the XML reader expands no
+entity), and keeps under `/data` only the events it follows in each feed and
+the address of each feed. It stores no secret; an address may hold a token in
+its query string: it is never logged (hosts only), nor are the coordinates of
+the house.
 
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the feeds and their publishers.

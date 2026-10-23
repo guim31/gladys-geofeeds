@@ -1,67 +1,171 @@
-# Template de démonstration
+# Flux GeoJSON & GeoRSS
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Un lecteur générique de **flux d'événements géolocalisés** pour Gladys Assistant : collez l'adresse
+de cinq flux au plus (séismes de l'USGS, alertes du GDACS, incendies du NSW Rural Fire Service, flux
+d'une préfecture ou d'un service local…), et Gladys suit les événements dans un rayon autour de
+votre maison, les affiche sur le tableau de bord et lance une scène quand l'un apparaît ou
+disparaît.
+
+Formats lus : **GeoJSON** (`FeatureCollection`), **GeoRSS** (Simple et GML), **W3C geo**
+(`geo:lat` / `geo:long`), **RSS 2.0**, **RSS 1.0** et **Atom**.
+
+Pour les catastrophes mondiales ou les séismes européens, les intégrations dédiées
+[GDACS](https://github.com/guim31/gladys-gdacs) et [EMSC](https://github.com/guim31/gladys-emsc)
+connaissent mieux leur source (niveaux d'alerte, révisions de magnitude) : celle-ci sert pour tous
+les autres flux.
+
+Un complément, pas un système d'alerte de sécurité : suivez les consignes des autorités locales.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- Un **appareil par flux** : le nombre d'événements dans la zone, la distance et le titre du plus
+  proche, le dernier événement en toutes lettres, et un badge qui dit si le flux se lit.
+- Un **widget** de tableau de bord : les événements en cours de chaque flux, puis les plus proches.
+- Deux **déclencheurs de scène** : nouvel événement dans la zone, événement disparu.
+- Une **action de scène** qui lit les événements de votre zone en une phrase.
+
+## Prérequis
+
+- Gladys Assistant 5.1.0 ou plus récent.
+- Un accès Internet depuis Gladys (les flux sont lus par le conteneur de l'intégration).
+- La position de votre maison dans Gladys (Paramètres → Maisons), ou des coordonnées saisies dans
+  la configuration. Sans l'une ni l'autre, seuls les flux au rayon « Tout le flux » fonctionnent.
+- L'adresse d'un flux public. Quelques-uns qui marchent :
+  - séismes du dernier jour de l'USGS :
+    `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson`
+  - alertes de catastrophes du GDACS : `https://www.gdacs.org/xml/rss.xml`
+  - grands incendies du NSW Rural Fire Service : `https://www.rfs.nsw.gov.au/feeds/majorIncidents.json`
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+### Réglages
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+Pour chacun des cinq flux :
 
-## Actions
+| Réglage                          | Usage                                                                                           |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Adresse du flux                  | http ou https, 5 Mo au plus. Vide : l'emplacement ne sert pas.                                  |
+| Nom                              | Affiché dans le widget et les scènes. Vide : « Flux géolocalisé 1 (hôte) ».                     |
+| Rayon                            | Distance du centre à l'événement. « Tout le flux » : tous les événements, pour un flux local.   |
+| Catégories (facultatif)          | Ne garder que les événements dont la catégorie contient l'un de ces mots (séparés par virgule). |
+| Propriété numérique (facultatif) | Une propriété numérique des événements, `mag` pour l'USGS : envoyée aux scènes comme `value`.   |
+| Valeur minimale (facultatif)     | Les événements dont la propriété est plus basse, ou absente, sont ignorés.                      |
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Puis, pour tous les flux :
 
-## Scènes
+- **Latitude / longitude du centre** : vides, la position de votre maison.
+- **Fréquence de mise à jour** : de 5 à 60 minutes.
+- **Âge maximal des événements** : les plus anciens sont ignorés ; ceux sans date lisible sont
+  gardés.
+- **Langue des textes** : noms des appareils et fonctionnalités à leur création, textes envoyés
+  aux scènes.
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Enregistrez, puis ouvrez l'onglet **Découverte** et créez les appareils.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+### Lecture d'un flux
 
-## Tableau de bord
+- **GeoJSON** : un Point est pris tel quel ; pour un Polygon, un MultiPolygon ou une ligne, le
+  centre de ses points ; pour une GeometryCollection, son premier Point (NSW RFS envoie le point
+  du feu et sa zone).
+- L'identifiant est `id` ou `guid` ; sans lui, une empreinte du titre, du lien et de la position.
+- Titre : `title`, `name`, `headline` ou `place`. Date : `time`, `date`, `pubDate`, `published`,
+  `updated`. Catégorie : `category` ou `type`. Lien : `url` ou `link`.
+- **RSS et Atom** : `georss:point`, `georss:polygon`, `georss:box`, `gml:pos` ou `geo:lat` /
+  `geo:long` ; titre, lien, `guid` ou `id`, `pubDate` ou `updated`, `category`. Les éléments sans
+  position sont ignorés.
+- Rien d'un flux n'est jamais exécuté : il est seulement lu. Le DOCTYPE XML est ignoré.
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+## Appareil
+
+Un appareil par flux, mis à jour par l'intégration elle-même (pas d'interrogation par Gladys) :
+
+| Fonctionnalité                         | Type         | Valeur                                                                          |
+| -------------------------------------- | ------------ | ------------------------------------------------------------------------------- |
+| Événements dans la zone                | compteur     | Les événements suivis du flux.                                                  |
+| Distance de l'événement le plus proche | distance, km | Le plus proche des événements suivis ; 20 038 km (le plus loin possible) sinon. |
+| Événement le plus proche               | texte        | Son titre.                                                                      |
+| Dernier événement                      | texte        | Le plus récent des événements suivis, avec sa distance.                         |
+
+Le **badge** de l'appareil affiche « Cloud » quand la dernière lecture a réussi, « Injoignable »
+sinon ; la raison (pas de réponse, erreur HTTP, pas un flux…) est dans l'état de l'intégration et
+le widget.
+
+## Widget du tableau de bord
+
+**Événements géolocalisés** : un titre avec le nombre d'événements, une ligne par flux (son
+nombre, ou pourquoi il ne se lit pas), les événements les plus proches (8 au plus) avec leur flux
+et leur distance, et l'heure de la dernière lecture. Touchez un événement : son résumé, sa date et
+un lien vers lui. Les réglages choisissent les flux affichés (vide : tous).
+
+## Déclencheurs de scène
+
+**Flux géolocalisé : nouvel événement dans la zone** : un événement entre dans les événements
+suivis d'un flux (rayon, âge, catégories et valeur minimale). **Flux géolocalisé : événement
+disparu** : un événement suivi quitte le flux, ou ne correspond plus (trop ancien, éloigné).
+
+La première lecture d'un flux, et la première après un changement de configuration, ne
+déclenchent rien : ce qui est là est le point de départ. Un redémarrage non plus (les événements
+suivis sont gardés dans `/data`). Au plus 20 événements par flux et par lecture.
+
+Filtre : le flux (vide : n'importe lequel). Variables :
+
+| Variable      | Contenu                                                      |
+| ------------- | ------------------------------------------------------------ |
+| `feed_name`   | Le nom du flux.                                              |
+| `title`       | Le titre de l'événement.                                     |
+| `category`    | Ses catégories, séparées par des virgules.                   |
+| `distance_km` | Distance au centre, vide sans centre.                        |
+| `value`       | La propriété numérique choisie pour le flux, vide sans elle. |
+| `time`        | La date de l'événement (ISO 8601), vide si inconnue.         |
+| `url`         | Le lien de l'événement.                                      |
+| `summary`     | Titre et distance, prêts pour un message.                    |
+| `latitude`    | Latitude de l'événement.                                     |
+| `longitude`   | Longitude de l'événement.                                    |
+| `properties`  | Les propriétés simples de l'événement, en JSON.              |
+
+## Action de scène
+
+**Flux géolocalisé : lire les événements** relit les flux si besoin et répond par `text` (les
+événements en une phrase, du plus proche au plus lointain), `count` et `nearest_km` (20038 s'il
+n'y en a aucun). Le filtre de flux la limite à un seul flux. Le bouton **Lire les flux
+maintenant** de la configuration dit, flux par flux, ce qui a été lu.
+
+## Exemples de scènes
+
+- **Séisme proche** : déclencheur « nouvel événement dans la zone » sur le flux USGS (rayon
+  250 km, propriété `mag`, minimum 4) → envoyer le message « {{summary}}, magnitude {{value}} ».
+- **Feu de brousse** : flux NSW RFS, catégories `Watch and Act, Emergency`, rayon 50 km → allumer
+  une lampe en rouge et envoyer le lien `{{url}}`.
+- **Point du matin** : chaque jour à 7 h 30, action « lire les événements » → lire `text` à voix
+  haute.
+
+## Sources des données, conditions et quotas
+
+Les données appartiennent à l'éditeur de chaque flux : lisez et respectez ses conditions
+d'utilisation, et citez-le si vous les partagez. Les flux de l'USGS sont dans le domaine public
+([earthquake.usgs.gov](https://earthquake.usgs.gov/earthquakes/feed/)), le GDACS demande à être
+cité. L'intégration lit chaque flux au plus toutes les 5 minutes, avec son propre User-Agent, et lit
+5 Mo au plus : assez pour les flux publics, mis à jour le plus souvent toutes les 5 à 15 minutes.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« pas un flux GeoJSON, RSS ou Atom »** : l'adresse donne une page web. Cherchez le lien du
+  flux (GeoJSON, RSS, Atom) sur le site de l'éditeur.
+- **Aucun événement alors que le flux en a** : vérifiez le rayon et la position de votre maison,
+  les catégories et la valeur minimale ; une propriété que les événements n'ont pas les exclut
+  tous.
+- **« Aucun centre »** : indiquez la position de votre maison dans Gladys ou saisissez des
+  coordonnées.
+- **Les dates manquent** (NSW RFS) : le flux donne des dates locales sans fuseau ; elles ne sont pas
+  devinées. L'âge maximal garde ces événements.
+- Journaux : `docker logs` du conteneur de l'intégration ; `LOG_LEVEL=debug` montre chaque
+  lecture.
+
+## Limites
+
+- Cinq flux au plus ; un rayon et des filtres par flux.
+- La distance est mesurée jusqu'au centre d'une zone, pas jusqu'à son bord : une grande zone
+  autour de votre maison peut être plus loin que le rayon.
+- Pas d'authentification : flux publics seulement (un jeton dans l'adresse fonctionne, et n'est
+  jamais journalisé).
+- Non affiliée à l'USGS, au GDACS, au NSW RFS ni à aucun éditeur de flux.

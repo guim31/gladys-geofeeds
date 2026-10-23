@@ -1,0 +1,166 @@
+# GeoJSON- & GeoRSS-Feeds
+
+Ein allgemeiner Leser für **Feeds verorteter Ereignisse** in Gladys Assistant: Füge die Adresse von
+bis zu fünf Feeds ein (Erdbeben des USGS, Warnungen von GDACS, Brände des NSW Rural Fire Service,
+der Feed einer örtlichen Behörde…), und Gladys verfolgt die Ereignisse in einem Radius um dein
+Haus, zeigt sie im Dashboard und startet eine Szene, wenn eines erscheint oder verschwindet.
+
+Gelesene Formate: **GeoJSON** (`FeatureCollection`), **GeoRSS** (Simple und GML), **W3C geo**
+(`geo:lat` / `geo:long`), **RSS 2.0**, **RSS 1.0** und **Atom**.
+
+Für weltweite Katastrophen oder europäische Erdbeben kennen die eigenen Integrationen
+[GDACS](https://github.com/guim31/gladys-gdacs) und [EMSC](https://github.com/guim31/gladys-emsc)
+ihre Quelle besser (Warnstufen, Magnitudenkorrekturen): Diese hier ist für alle anderen Feeds.
+
+Eine Ergänzung, kein Sicherheitswarnsystem: Befolge die Anweisungen deiner örtlichen Behörden.
+
+## Was du bekommst
+
+- Ein **Gerät pro Feed**: die Zahl der Ereignisse im Gebiet, Entfernung und Titel des nächsten,
+  das neueste Ereignis in Worten und ein Badge, das zeigt, ob sich der Feed lesen lässt.
+- Ein **Dashboard-Widget**: die aktuellen Ereignisse jedes Feeds, dann die nächsten.
+- Zwei **Szenen-Auslöser**: neues Ereignis im Gebiet, Ereignis entfernt.
+- Eine **Szenen-Aktion**, die die Ereignisse deines Gebiets als einen Satz liest.
+
+## Voraussetzungen
+
+- Gladys Assistant 5.1.0 oder neuer.
+- Internetzugang von Gladys aus (die Feeds liest der Container der Integration).
+- Der Standort deines Hauses in Gladys (Einstellungen → Häuser) oder in der Konfiguration
+  eingetragene Koordinaten. Ohne beides funktionieren nur Feeds mit dem Radius „Ganzer Feed“.
+- Die Adresse eines öffentlichen Feeds. Einige, die funktionieren:
+  - Erdbeben des letzten Tages vom USGS:
+    `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson`
+  - Katastrophenwarnungen von GDACS: `https://www.gdacs.org/xml/rss.xml`
+  - Große Einsätze des NSW Rural Fire Service: `https://www.rfs.nsw.gov.au/feeds/majorIncidents.json`
+
+## Konfiguration
+
+### Einstellungen
+
+Für jeden der fünf Feeds:
+
+| Einstellung                   | Verwendung                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------------- |
+| Feed-Adresse                  | http oder https, höchstens 5 MB. Leer: Der Platz wird nicht genutzt.                          |
+| Name                          | Im Widget und in den Szenen angezeigt. Leer: „Geo-Feed 1 (Host)“.                             |
+| Radius                        | Entfernung vom Mittelpunkt zum Ereignis. „Ganzer Feed“: alle Ereignisse, für lokale Feeds.    |
+| Kategorien (optional)         | Nur Ereignisse behalten, deren Kategorie eines dieser Wörter enthält (durch Kommas getrennt). |
+| Zahlen-Eigenschaft (optional) | Eine Zahlen-Eigenschaft der Ereignisse, `mag` beim USGS: als `value` an die Szenen gesendet.  |
+| Mindestwert (optional)        | Ereignisse mit kleinerer oder fehlender Eigenschaft werden ignoriert.                         |
+
+Dann, für alle Feeds:
+
+- **Breiten- / Längengrad des Mittelpunkts**: leer, der Standort deines Hauses.
+- **Aktualisierungsintervall**: 5 bis 60 Minuten.
+- **Höchstalter der Ereignisse**: ältere werden ignoriert; Ereignisse ohne lesbares Datum bleiben.
+- **Sprache der Texte**: Namen der Geräte und Funktionen bei ihrer Erstellung, Texte für die
+  Szenen.
+
+Speichere, öffne dann den Tab **Entdecken** und lege die Geräte an.
+
+### Wie ein Feed gelesen wird
+
+- **GeoJSON**: Ein Point wird so genommen, wie er ist; bei Polygon, MultiPolygon oder Linie die
+  Mitte ihrer Punkte; bei einer GeometryCollection ihr erster Point (NSW RFS sendet den Brandpunkt
+  und seine Fläche).
+- Die Kennung ist `id` oder `guid`; ohne sie ein Fingerabdruck aus Titel, Link und Position.
+- Titel: `title`, `name`, `headline` oder `place`. Datum: `time`, `date`, `pubDate`, `published`,
+  `updated`. Kategorie: `category` oder `type`. Link: `url` oder `link`.
+- **RSS und Atom**: `georss:point`, `georss:polygon`, `georss:box`, `gml:pos` oder `geo:lat` /
+  `geo:long`; Titel, Link, `guid` oder `id`, `pubDate` oder `updated`, `category`. Einträge ohne
+  Position werden übersprungen.
+- Nichts aus einem Feed wird je ausgeführt: Er wird nur gelesen. Der XML-DOCTYPE wird ignoriert.
+
+## Gerät
+
+Ein Gerät pro Feed, von der Integration selbst aktualisiert (keine Abfrage durch Gladys):
+
+| Funktion                            | Typ            | Wert                                                                         |
+| ----------------------------------- | -------------- | ---------------------------------------------------------------------------- |
+| Ereignisse im Gebiet                | Zähler         | Die verfolgten Ereignisse des Feeds.                                         |
+| Entfernung des nächsten Ereignisses | Entfernung, km | Das nächste verfolgte Ereignis; 20.038 km (so weit wie möglich), wenn keins. |
+| Nächstes Ereignis                   | Text           | Sein Titel.                                                                  |
+| Neuestes Ereignis                   | Text           | Das neueste verfolgte Ereignis, mit seiner Entfernung.                       |
+
+Das **Badge** des Geräts zeigt „Cloud“, wenn das letzte Lesen geklappt hat, sonst „Nicht
+erreichbar“; der Grund (keine Antwort, HTTP-Fehler, kein Feed…) steht im Status der Integration und
+im Widget.
+
+## Dashboard-Widget
+
+**Geo-Feed-Ereignisse**: eine Überschrift mit der Zahl der Ereignisse, eine Zeile pro Feed (seine
+Zahl oder warum er sich nicht lesen lässt), die nächsten Ereignisse (höchstens 8) mit Feed und
+Entfernung und die Uhrzeit des letzten Lesens. Tippe auf ein Ereignis: seine Zusammenfassung, sein
+Datum und ein Link dazu. In den Einstellungen wählst du die angezeigten Feeds (leer: alle).
+
+## Szenen-Auslöser
+
+**Geo-Feed: neues Ereignis im Gebiet**: Ein Ereignis kommt zu den verfolgten Ereignissen eines
+Feeds hinzu (Radius, Alter, Kategorien und Mindestwert). **Geo-Feed: Ereignis entfernt**: Ein
+verfolgtes Ereignis verschwindet aus dem Feed oder passt nicht mehr (zu alt, entfernt).
+
+Das erste Lesen eines Feeds und das erste nach einer Änderung der Konfiguration lösen nichts aus:
+Was da ist, ist der Ausgangspunkt. Ein Neustart auch nicht (die verfolgten Ereignisse liegen in
+`/data`). Höchstens 20 Ereignisse pro Feed und Lesen.
+
+Filter: der Feed (leer: beliebig). Variablen:
+
+| Variable      | Inhalt                                                       |
+| ------------- | ------------------------------------------------------------ |
+| `feed_name`   | Der Name des Feeds.                                          |
+| `title`       | Der Titel des Ereignisses.                                   |
+| `category`    | Seine Kategorien, durch Kommas getrennt.                     |
+| `distance_km` | Entfernung zum Mittelpunkt, leer ohne Mittelpunkt.           |
+| `value`       | Die für den Feed gewählte Zahlen-Eigenschaft, leer ohne sie. |
+| `time`        | Das Datum des Ereignisses (ISO 8601), leer, wenn unbekannt.  |
+| `url`         | Der Link des Ereignisses.                                    |
+| `summary`     | Titel und Entfernung, fertig für eine Nachricht.             |
+| `latitude`    | Breitengrad des Ereignisses.                                 |
+| `longitude`   | Längengrad des Ereignisses.                                  |
+| `properties`  | Die einfachen Eigenschaften des Ereignisses, als JSON.       |
+
+## Szenen-Aktion
+
+**Geo-Feed: Ereignisse lesen** liest die Feeds bei Bedarf neu und antwortet mit `text` (die
+Ereignisse als ein Satz, die nächsten zuerst), `count` und `nearest_km` (20038, wenn es keins
+gibt). Der Feed-Filter beschränkt sie auf einen Feed. Die Schaltfläche **Feeds jetzt lesen** der
+Konfiguration zeigt Feed für Feed, was gelesen wurde.
+
+## Szenen-Beispiele
+
+- **Erdbeben in der Nähe**: Auslöser „neues Ereignis im Gebiet“ auf dem USGS-Feed (Radius 250 km,
+  Eigenschaft `mag`, Minimum 4) → Nachricht „{{summary}}, Magnitude {{value}}“ senden.
+- **Buschfeuer**: NSW-RFS-Feed, Kategorien `Watch and Act, Emergency`, Radius 50 km → eine Lampe
+  rot einschalten und den Link `{{url}}` senden.
+- **Morgenüberblick**: jeden Tag um 7:30 die Aktion „Ereignisse lesen“ → `text` vorlesen.
+
+## Datenquellen, Bedingungen und Kontingente
+
+Die Daten gehören dem Herausgeber jedes Feeds: Lies und beachte seine Nutzungsbedingungen und
+nenne ihn, wenn du sie teilst. Die Feeds des USGS sind gemeinfrei
+([earthquake.usgs.gov](https://earthquake.usgs.gov/earthquakes/feed/)), GDACS möchte genannt
+werden. Die Integration liest jeden Feed höchstens alle 5 Minuten, mit eigenem User-Agent, und
+liest höchstens 5 MB: genug für öffentliche Feeds, die meist alle 5 bis 15 Minuten aktualisiert
+werden.
+
+## Fehlerbehebung
+
+- **„kein GeoJSON-, RSS- oder Atom-Feed“**: Die Adresse liefert eine Webseite. Suche auf der Seite
+  des Herausgebers den Link des Feeds (GeoJSON, RSS, Atom).
+- **Kein Ereignis, obwohl der Feed welche hat**: Prüfe den Radius und den Standort deines Hauses,
+  die Kategorien und den Mindestwert; eine Eigenschaft, die die Ereignisse nicht haben, schließt
+  sie alle aus.
+- **„Kein Mittelpunkt“**: Gib deinem Haus in Gladys einen Standort oder trage Koordinaten ein.
+- **Die Daten fehlen** (NSW RFS): Der Feed liefert lokale Daten ohne Zeitzone; sie werden nicht
+  geraten. Das Höchstalter behält diese Ereignisse.
+- Protokolle: `docker logs` des Containers der Integration; `LOG_LEVEL=debug` zeigt jedes Lesen.
+
+## Grenzen
+
+- Höchstens fünf Feeds; ein Radius und Filter pro Feed.
+- Die Entfernung wird zur Mitte eines Gebiets gemessen, nicht zu seinem Rand: Ein großes Gebiet um
+  dein Haus kann weiter weg sein als der Radius.
+- Keine Anmeldung: nur öffentliche Feeds (ein Token in der Adresse funktioniert und wird nie
+  protokolliert).
+- Nicht mit dem USGS, GDACS, NSW RFS oder einem anderen Feed-Herausgeber verbunden.

@@ -1,0 +1,279 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [145.8307952880001, -31.507942198999956] },
+      "properties": {
+        "title": "COBAR WATER SPORTS AREA TINDERA ST, COBAR",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Advice",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683156",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 2:49:00 PM",
+        "description": "ALERT LEVEL: Advice <br />LOCATION: COBAR WATER SPORTS AREA TINDERA ST, COBAR 2835 <br />COUNCIL AREA: Cobar <br />STATUS: Under control <br />TYPE: Bush Fire <br />FIRE: Yes <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Fire and Rescue NSW <br />UPDATED: 24 Oct 2026 01:49"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [142.24504600100011, -33.732232999999951] },
+      "properties": {
+        "title": "HIGH DARLING RD",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Advice",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683114",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 5:25:00 AM",
+        "description": "ALERT LEVEL: Advice <br />LOCATION: TULNEY POINT STATION, HIGH DARLING RD, PARA 2648 <br />COUNCIL AREA: Wentworth <br />STATUS: Under control <br />TYPE: Grass Fire <br />FIRE: Yes <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Rural Fire Service <br />UPDATED: 23 Oct 2026 16:25"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          { "type": "Point", "coordinates": [149.71421924900005, -35.867198514999984] },
+          {
+            "type": "GeometryCollection",
+            "geometries": [
+              {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [149.713865095, -35.8680718589999],
+                    [149.713392188, -35.8684038549999],
+                    [149.713232686, -35.868364296],
+                    [149.712969475, -35.868105108],
+                    [149.712455035, -35.868237627],
+                    [149.712191371, -35.867964139],
+                    [149.711927023, -35.867669196],
+                    [149.711390343, -35.8673800089999],
+                    [149.711160913, -35.8670771719999],
+                    [149.710966623, -35.866773591],
+                    [149.711092469, -35.86658489],
+                    [149.711270338, -35.866373623],
+                    [149.711541646, -35.866060204],
+                    [149.712118937, -35.865969293],
+                    [149.712359097, -35.865506266],
+                    [149.712744486, -35.864911369],
+                    [149.712778941, -35.8648891729999],
+                    [149.71336615, -35.864833824],
+                    [149.713919932, -35.865108332],
+                    [149.714070424, -35.865691899],
+                    [149.714474079, -35.866220019],
+                    [149.71462651, -35.8665888799999],
+                    [149.71448756, -35.8671928799999],
+                    [149.714278558, -35.867805517],
+                    [149.714009418, -35.8679113859999],
+                    [149.713865095, -35.8680718589999]
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "properties": {
+        "title": "Minuma Range ",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Advice",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/682009",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 6:21:00 AM",
+        "description": "ALERT LEVEL: Advice <br />LOCATION: COOMA RD, JINDEN 2622 <br />COUNCIL AREA: Eurobodalla <br />STATUS: Under control <br />TYPE: Bush Fire <br />FIRE: Yes <br />SIZE: 8 ha <br />RESPONSIBLE AGENCY: NSW National Parks and Wildlife Service <br />UPDATED: 23 Oct 2026 17:21"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [145.83198300100003, -31.50973399999998] },
+      "properties": {
+        "title": "Tindera St, Cobar",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Advice",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683155",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 7:46:00 AM",
+        "description": "ALERT LEVEL: Advice <br />LOCATION: Tindera St, Cobar, NSW 2835 <br />COUNCIL AREA: Cobar <br />STATUS: Under control <br />TYPE: Bush Fire <br />FIRE: Yes <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Fire and Rescue NSW <br />UPDATED: 23 Oct 2026 18:46"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          { "type": "Point", "coordinates": [149.07344341300006, -35.362946008999984] },
+          {
+            "type": "GeometryCollection",
+            "geometries": [
+              {
+                "type": "Polygon",
+                "coordinates": [
+                  [
+                    [149.0722, -35.3605200009998],
+                    [149.07222000000004, -35.360670002000006],
+                    [149.07231999999985, -35.360830000999982],
+                    [149.07263000000012, -35.361400000999886],
+                    [149.07265999999993, -35.361750000999841],
+                    [149.07252999999997, -35.362410001000036],
+                    [149.07286000099992, -35.362540000999928],
+                    [149.07303000100012, -35.362680000999909],
+                    [149.07316000100005, -35.362850001000076],
+                    [149.07314999999988, -35.362890000999919],
+                    [149.07312999999988, -35.363070001999866],
+                    [149.07289999899984, -35.363300000999907],
+                    [149.07253999900016, -35.36330000100002],
+                    [149.07222999900009, -35.363180000999833],
+                    [149.07198000000005, -35.362890001000025],
+                    [149.071910001, -35.36292000100002],
+                    [149.07192000100008, -35.3631800009999],
+                    [149.07198000000017, -35.363310000999867],
+                    [149.07209999999992, -35.363420001000087],
+                    [149.07216000000003, -35.363620000000076],
+                    [149.0721300000001, -35.363789999999831],
+                    [149.07226999999997, -35.364140002000006],
+                    [149.07242999999988, -35.364350000999877],
+                    [149.07260999899998, -35.364550001999817],
+                    [149.07265999999984, -35.364660000999876],
+                    [149.07268000000013, -35.364930002000015],
+                    [149.072700001, -35.364980001999939],
+                    [149.07292999899985, -35.364960000999879],
+                    [149.07299000000003, -35.364910000999757],
+                    [149.07306999999989, -35.364899999999864],
+                    [149.07325000000009, -35.364940000000061],
+                    [149.07335999900008, -35.364999999999981],
+                    [149.07358999999991, -35.365060001999893],
+                    [149.07377000099996, -35.365210000999916],
+                    [149.07406999899987, -35.365270000000024],
+                    [149.07414999999992, -35.3651400009999],
+                    [149.07418999999996, -35.365020000999927],
+                    [149.07397999999998, -35.364460000999934],
+                    [149.07398999999995, -35.364360000000026],
+                    [149.07394000000016, -35.364140000999974],
+                    [149.07396999900018, -35.363730001000029],
+                    [149.07395999999986, -35.363380001],
+                    [149.07399999899997, -35.363239999999976],
+                    [149.07410999999988, -35.363110000999889],
+                    [149.07380999899996, -35.363070001999937],
+                    [149.07347999900009, -35.363010001000028],
+                    [149.07322999900009, -35.362920000999964],
+                    [149.07353000000006, -35.363009999999882],
+                    [149.07410999999988, -35.363110000999889],
+                    [149.07419999899986, -35.363130000000019],
+                    [149.07431999999991, -35.363160001000118],
+                    [149.07419999900006, -35.362750000999888],
+                    [149.07420000000013, -35.362540001999804],
+                    [149.07421999999991, -35.362390000999717],
+                    [149.07421999999988, -35.361730000999913],
+                    [149.07425000000009, -35.361490002000053],
+                    [149.07430999999997, -35.36124000099985],
+                    [149.07437999900012, -35.36101000100011],
+                    [149.07448999999986, -35.360830001999972],
+                    [149.07461999999995, -35.360669999999857],
+                    [149.07503999999986, -35.360420001000023],
+                    [149.07475999900021, -35.360339999999944],
+                    [149.07416000100014, -35.360270000999961],
+                    [149.07332000000014, -35.360220000999973],
+                    [149.072930001, -35.360180000999989],
+                    [149.07285999999996, -35.360190001000049],
+                    [149.07278999999988, -35.360300001000084],
+                    [149.07269000000011, -35.360380000999896],
+                    [149.07248, -35.360490000999889],
+                    [149.07234999999994, -35.360489999999864],
+                    [149.0722, -35.3605200009998]
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "properties": {
+        "title": "FB915 Mt Taylor",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Planned Burn",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/681883",
+        "guid_isPermaLink": "true",
+        "pubDate": "19/10/2026 8:50:00 PM",
+        "description": "ALERT LEVEL: Planned Burn <br />LOCATION: MOUNT TAYLOR, PEARCE ACT 2607 <br />COUNCIL AREA: ACT <br />STATUS: Under control <br />TYPE: Hazard Reduction <br />FIRE: Yes <br />SIZE: 8 ha <br />RESPONSIBLE AGENCY: ACT Parks And Conservation Service <br />UPDATED: 20 Oct 2026 07:50"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [148.12022400100011, -34.542689999999936] },
+      "properties": {
+        "title": "NORTH JINDALEE RD, WALLENDBEEN NSW 2588",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Planned Burn",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/681880",
+        "guid_isPermaLink": "true",
+        "pubDate": "22/10/2026 3:01:00 PM",
+        "description": "ALERT LEVEL: Planned Burn <br />LOCATION: BLONDVAL RD, WALLENDBEEN NSW 2588 <br />COUNCIL AREA: Cootamundra-Gundagai <br />STATUS: Under control <br />TYPE: Hazard Reduction <br />FIRE: Yes <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Rural Fire Service <br />UPDATED: 23 Oct 2026 02:01"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [147.24666500000012, -35.196888999999942] },
+      "properties": {
+        "title": "BRIDGE ST, URANQUINTY",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Not Applicable",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683174",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 3:35:00 PM",
+        "description": "ALERT LEVEL: Not Applicable <br />LOCATION: BRIDGE ST, URANQUINTY 2652 <br />COUNCIL AREA: Wagga Wagga <br />STATUS: Under control <br />TYPE: Structure Fire <br />FIRE: Yes <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Rural Fire Service <br />UPDATED: 24 Oct 2026 02:35"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [153.07679748500004, -30.150463104999972] },
+      "properties": {
+        "title": "BUCCA RD, BUCCA",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Not Applicable",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683182",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 4:07:00 PM",
+        "description": "ALERT LEVEL: Not Applicable <br />LOCATION: BUCCA RD, BUCCA 2450 <br />COUNCIL AREA: Coffs Harbour <br />STATUS: Not yet controlled <br />TYPE: Flood/Storm/Tree Down <br />FIRE: No <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Rural Fire Service <br />UPDATED: 24 Oct 2026 03:07"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [149.618331, -33.42381899999998] },
+      "properties": {
+        "title": "HAMPDEN PARK RD, KELSO",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Not Applicable",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683104",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 5:22:00 AM",
+        "description": "ALERT LEVEL: Not Applicable <br />LOCATION: HAMPDEN PARK RD, KELSO 2795 <br />COUNCIL AREA: Bathurst <br />STATUS: Under control <br />TYPE: Planned Event <br />FIRE: No <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Rural Fire Service <br />UPDATED: 23 Oct 2026 16:22"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [145.95979309100005, -34.227401732999965] },
+      "properties": {
+        "title": "KIDMAN WAY, THARBOGANG",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Not Applicable",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683122",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 2:45:00 PM",
+        "description": "ALERT LEVEL: Not Applicable <br />LOCATION: KIDMAN WAY, THARBOGANG 2680 <br />COUNCIL AREA: Griffith <br />STATUS: Under control <br />TYPE: Other <br />FIRE: Yes <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Rural Fire Service <br />UPDATED: 24 Oct 2026 01:45"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [151.62184143100012, -32.724105834999932] },
+      "properties": {
+        "title": "QUEENS WHARF RD, MORPETH",
+        "link": "https://www.rfs.nsw.gov.au/fire-information/fires-near-me",
+        "category": "Not Applicable",
+        "guid": "https://incidents.rfs.nsw.gov.au/api/v1/incidents/683184",
+        "guid_isPermaLink": "true",
+        "pubDate": "23/10/2026 5:26:00 PM",
+        "description": "ALERT LEVEL: Not Applicable <br />LOCATION: QUEENS WHARF RD, MORPETH 2321 <br />COUNCIL AREA: Maitland <br />STATUS: Under control <br />TYPE: Vehicle/Equipment Fire <br />FIRE: Yes <br />SIZE: 0 ha <br />RESPONSIBLE AGENCY: Rural Fire Service <br />UPDATED: 24 Oct 2026 04:26"
+      }
+    }
+  ]
+}
