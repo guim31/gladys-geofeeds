@@ -63,6 +63,7 @@ test('feed addresses: http and https only', () => {
   assert.equal(parseFeedUrl('file:///etc/passwd'), null);
   assert.equal(parseFeedUrl('javascript:alert(1)'), null);
   assert.equal(parseFeedUrl('not a url'), null);
+  assert.equal(parseFeedUrl('https://user:pass@a.example/x'), null);
   assert.equal(parseFeedUrl(''), null);
 });
 

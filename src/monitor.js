@@ -25,7 +25,7 @@ import { DEVICE_TRANSPORTS, createLogger } from '@gladysassistant/integration-sd
 import { NO_EVENT_KM, MAX_COUNT, buildDevice, deviceIds, feedName, slotOf } from './device.js';
 import { distanceKm } from './geo.js';
 import { FeedError, fetchFeed, hostOf } from './http.js';
-import { FeedFormatError, parseFeed, toNumber } from './parse.js';
+import { parseFeed, toNumber } from './parse.js';
 import { PHRASES, STATUS, describe, join, reasonOf, render, titleOf } from './messages.js';
 import { LANGUAGES } from './config.js';
 
@@ -50,6 +50,8 @@ export const DEFAULT_TIMINGS = {
 export const MAX_EVENTS_PER_CYCLE = 20;
 // Followed events kept under /data per feed (enough for "event removed").
 export const MAX_KEPT = 500;
+// Keys only, beyond: the cap of parse.js MAX_EVENTS.
+export const MAX_KNOWN = 5000;
 
 const byDistanceThenTime = (a, b) =>
   (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity) || (b.time ?? 0) - (a.time ?? 0);
@@ -283,11 +285,13 @@ export class Monitor {
   async cycle(slots) {
     this.lastCycleAt = this.now();
     const center = await this.center();
-    for (const state of this.feeds.values()) {
-      if (slots === null || slots.includes(state.feed.slot)) {
-        await this.readFeed(state, center);
-      }
-    }
+    // In parallel: five silent hosts must not cost five timeouts in a row
+    // (the actions wait for the cycle, 120 s at most).
+    await Promise.all(
+      [...this.feeds.values()]
+        .filter((state) => slots === null || slots.includes(state.feed.slot))
+        .map((state) => this.readFeed(state, center)),
+    );
     this.recovered('cycle', 'Refresh cycles work again');
     this.store.save(this.data);
     await this.publishStates();
@@ -313,10 +317,8 @@ export class Monitor {
       try {
         parsed = parseFeed(body);
       } catch (err) {
-        if (err instanceof FeedFormatError) {
-          throw new FeedError('format', `${host}: ${err.message}`);
-        }
-        throw err;
+        // Whatever the parser refuses (format, too many elements, nesting) is not a feed.
+        throw new FeedError('format', `${host}: ${String(err.message).slice(0, 120)}`);
       }
     } catch (err) {
       state.ok = false;
@@ -329,6 +331,13 @@ export class Monitor {
     state.error = null;
     state.truncated = parsed.truncated;
     state.lastSuccessAt = this.now();
+    if (feed.radiusKm > 0 && !center) {
+      // The houses could not be read (Gladys restarting) or have no location:
+      // nothing can be measured, and dropping every event would fire as many
+      // "removed" now and "new" later. Said in the connection status.
+      logger.debug(`Feed ${feed.slot}: no centre, the followed events are kept`);
+      return;
+    }
     const followed = this.follow(parsed.events, feed, center);
     logger.debug(
       `Feed ${feed.slot} (${host}, ${parsed.format}): ${parsed.events.length} located item(s), ${parsed.skipped} without position, ${followed.length} followed`,
@@ -375,19 +384,25 @@ export class Monitor {
     const { feed } = state;
     const saved = this.data.feeds[feed.slot];
     const before = saved?.followed ?? {};
+    const beforeOthers = new Set(Array.isArray(saved?.others) ? saved.others : []);
     const seed = state.seed || !saved;
     state.seed = false;
     const current = {};
     for (const event of followed.slice(0, MAX_KEPT)) {
       current[event.key] = this.eventData(feed, event);
     }
-    this.data.feeds[feed.slot] = { url: feed.url, followed: current };
+    // Past MAX_KEPT only the keys are kept: an event coming back into the
+    // first ones is not news.
+    const others = followed.slice(MAX_KEPT, MAX_KNOWN).map((event) => event.key);
+    this.data.feeds[feed.slot] = { url: feed.url, followed: current, others };
     if (seed) {
       logger.debug(`Feed ${feed.slot}: ${followed.length} event(s) taken as known`);
       return;
     }
-    // Past MAX_KEPT an event is not remembered: neither new nor removed.
-    const added = followed.slice(0, MAX_KEPT).filter((event) => !before[event.key]);
+    // Past MAX_KEPT an event fires nothing: neither new nor removed.
+    const added = followed
+      .slice(0, MAX_KEPT)
+      .filter((event) => !before[event.key] && !beforeOthers.has(event.key));
     const removed = Object.entries(before).filter(([eventKey]) => !current[eventKey]);
     const known = new Set(followed.map((event) => event.key));
     for (const [index, event] of added.entries()) {

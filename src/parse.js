@@ -40,10 +40,13 @@ const clip = (text, max) => (text.length <= max ? text : `${text.slice(0, max - 
 
 /** Plain text of an HTML fragment (descriptions are often HTML). */
 export function plainText(html) {
+  // Bounded first: the result is clipped anyway, and a hostile description
+  // of megabytes must not cost seconds of CPU.
   const text = String(html ?? '')
+    .slice(0, 8 * MAX_TEXT)
     .replace(/<br\s*\/?>/gi, ' · ')
     .replace(/<\/(p|div|li|dd|dt|tr|h\d)>/gi, ' · ')
-    .replace(/<[^>]*>/g, ' ')
+    .replace(/<[^<>]*>/g, ' ')
     .replace(/&nbsp;/gi, ' ')
     .replace(/&(?:#x[0-9a-f]+|#\d+|lt|gt|amp|quot|apos|deg);/gi, (entity) =>
       entity.toLowerCase() === '&deg;' ? '°' : decodeOne(entity),
@@ -75,7 +78,10 @@ export function toNumber(value) {
     return null;
   }
   const text = value.trim().replace(',', '.');
-  return /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(text) ? Number(text) : null;
+  if (text.length > 40) {
+    return null;
+  }
+  return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text) ? Number(text) : null;
 }
 
 /**
@@ -86,19 +92,25 @@ export function toNumber(value) {
 export function parseTime(value) {
   const number = toNumber(value);
   if (number !== null) {
-    if (number <= 0) {
+    // 20261023 is a day (AAAAMMJJ), not seconds since 1970: not guessed.
+    if (number <= 0 || /^\d{8}$/.test(String(value).trim())) {
       return null;
     }
     return number < 1e11 ? number * 1000 : number;
   }
+  if (typeof value !== 'string' || value.trim() === '' || value.length > 100) {
+    return null;
+  }
+  const text = value.trim();
+  // Local to the publisher, without a zone: day-first dates, and ISO times
+  // without "Z" nor offset (Date.parse would read them in the TZ of Gladys).
   if (
-    typeof value !== 'string' ||
-    value.trim() === '' ||
-    /^\d{1,2}\/\d{1,2}\//.test(value.trim())
+    /^\d{1,2}\/\d{1,2}\//.test(text) ||
+    (/^\d{4}-\d\d-\d\d[T ]\d\d:\d\d/.test(text) && !/(?:Z|[+-]\d\d:?\d\d)$/i.test(text))
   ) {
     return null;
   }
-  const time = Date.parse(value.trim());
+  const time = Date.parse(text);
   return Number.isFinite(time) ? time : null;
 }
 
@@ -114,7 +126,15 @@ function average(points) {
     return null;
   }
   const latitude = valid.reduce((sum, [lat]) => sum + lat, 0) / valid.length;
-  const longitude = valid.reduce((sum, [, lon]) => sum + lon, 0) / valid.length;
+  // An area across the antimeridian (179° … -179°, around Fiji): averaged on
+  // 0° … 360°, else its centre would fall on the other side of the Earth.
+  const longitudes = valid.map(([, lon]) => lon);
+  const wraps = Math.max(...longitudes) - Math.min(...longitudes) > 180;
+  let longitude =
+    longitudes.reduce((sum, lon) => sum + (wraps && lon < 0 ? lon + 360 : lon), 0) / valid.length;
+  if (longitude > 180) {
+    longitude -= 360;
+  }
   return { latitude, longitude };
 }
 
@@ -136,8 +156,9 @@ const geoJsonPoints = (positions) =>
     .map(([lon, lat]) => [lat, lon]);
 
 /** The point of a GeoJSON geometry used for the distance; null if none. */
-export function geometryCenter(geometry) {
-  if (!geometry || typeof geometry !== 'object') {
+export function geometryCenter(geometry, depth = 0) {
+  // Nested collections: a few levels at most (no stack overflow).
+  if (!geometry || typeof geometry !== 'object' || depth > 8) {
     return null;
   }
   const c = geometry.coordinates;
@@ -161,7 +182,7 @@ export function geometryCenter(geometry) {
       const geometries = Array.isArray(geometry.geometries) ? geometry.geometries : [];
       const point = geometries.find((g) => g?.type === 'Point');
       for (const g of point ? [point, ...geometries] : geometries) {
-        const center = geometryCenter(g);
+        const center = geometryCenter(g, depth + 1);
         if (center) {
           return center;
         }
@@ -227,7 +248,9 @@ const CATEGORY_NAMES = ['category', 'categories', 'type', 'eventtype', 'event_ty
 const URL_NAMES = ['url', 'link', 'href', 'web', 'website'];
 const SUMMARY_NAMES = ['description', 'summary', 'details', 'place'];
 
-const isHttpUrl = (value) => typeof value === 'string' && /^https?:\/\/\S+$/i.test(value.trim());
+// 1000 characters at most: the limit of a string in a scene event.
+const isHttpUrl = (value) =>
+  typeof value === 'string' && value.length <= 1000 && /^https?:\/\/\S+$/i.test(value.trim());
 
 function urlOf(value) {
   if (isHttpUrl(value)) {
@@ -399,6 +422,17 @@ function xmlProperties(item) {
   return found;
 }
 
+// A title is plain text ("5 < 10" stays), unless Atom says it is HTML.
+function titleText(node) {
+  if (!node) {
+    return '';
+  }
+  const type = node.attributes.type;
+  return type === 'html' || type === 'xhtml'
+    ? plainText(textOf(node))
+    : clean(textOf(node).slice(0, 8 * MAX_TEXT));
+}
+
 export function parseItem(item) {
   const center = xmlPosition(item);
   if (!center) {
@@ -413,7 +447,7 @@ export function parseItem(item) {
     .map((text) => clip(text, 100));
   const summaryNode = child(item, 'description', 'summary', 'content');
   const event = {
-    title: clip(plainText(textOf(child(item, 'title'))), MAX_TEXT),
+    title: clip(titleText(child(item, 'title')), MAX_TEXT),
     time: time ?? null,
     categories: [...new Set(categories)],
     url: xmlLink(item),
@@ -438,7 +472,7 @@ function xmlItems(root) {
   if (name === 'RDF') {
     return childrenNamed(root, 'item');
   }
-  throw new FeedFormatError(`XML, but neither RSS nor Atom (<${root.name}>)`);
+  throw new FeedFormatError(`XML, but neither RSS nor Atom (<${root.name.slice(0, 40)}>)`);
 }
 
 // --- Entry point -------------------------------------------------------------------

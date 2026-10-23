@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { geometryCenter, parseFeed, parseTime, plainText, MAX_EVENTS } from '../src/parse.js';
-import { parseXml } from '../src/xml.js';
+import { MAX_NODES, parseXml } from '../src/xml.js';
 import { fixtureText } from './helpers/world.js';
 
 const rss = (item) =>
@@ -187,4 +187,50 @@ test('a huge feed is read up to its cap', () => {
   const result = parseFeed(JSON.stringify({ type: 'FeatureCollection', features }));
   assert.equal(result.events.length, MAX_EVENTS);
   assert.equal(result.truncated, true);
+});
+
+test('hostile input stays linear: thousands of "<", huge numbers, tiny elements', () => {
+  const started = Date.now();
+  plainText('<'.repeat(200000));
+  parseTime('1'.repeat(200000) + 'x');
+  assert.ok(Date.now() - started < 500, `${Date.now() - started} ms`);
+  assert.throws(() => parseFeed(`<rss>${'<a/>'.repeat(MAX_NODES + 1)}</rss>`), /XML elements/);
+});
+
+test('more dates that are not guessed: ISO without zone, AAAAMMJJ', () => {
+  assert.equal(parseTime('2026-10-23T14:49:00'), null);
+  assert.equal(parseTime('2026-10-23T14:49:00+11:00'), Date.parse('2026-10-23T03:49:00Z'));
+  assert.equal(parseTime('2026-10-23'), Date.parse('2026-10-23'));
+  assert.equal(parseTime(20261023), null);
+});
+
+test('an area across the antimeridian has its centre on the right side', () => {
+  const ring = [
+    [179, -17],
+    [-179, -17],
+    [-179, -19],
+    [179, -19],
+    [179, -17],
+  ];
+  const center = geometryCenter({ type: 'Polygon', coordinates: [ring] });
+  assert.equal(center.latitude, -18);
+  assert.ok(Math.abs(Math.abs(center.longitude) - 180) < 1e-9, String(center.longitude));
+});
+
+test('a plain RSS title keeps its "<"; links longer than 1000 characters are dropped', () => {
+  const [event] = parseFeed(
+    rss(
+      `<item><title>Wind 5 &lt; 10 km/h</title><link>https://x.example/${'a'.repeat(1000)}</link><georss:point>1 2</georss:point></item>`,
+    ),
+  ).events;
+  assert.equal(event.title, 'Wind 5 < 10 km/h');
+  assert.equal(event.url, null);
+});
+
+test('deeply nested geometry collections do not overflow the stack', () => {
+  let geometry = { type: 'Point', coordinates: [1, 2] };
+  for (let i = 0; i < 10000; i += 1) {
+    geometry = { type: 'GeometryCollection', geometries: [geometry] };
+  }
+  assert.equal(geometryCenter(geometry), null);
 });

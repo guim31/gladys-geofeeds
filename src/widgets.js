@@ -68,7 +68,9 @@ function heading(count, language) {
     return t(TEXT.one, language);
   }
   const shown = count > MAX_ITEMS ? ` (${MAX_ITEMS}${t(TEXT.shown, language)})` : '';
-  return `${count}${t(TEXT.many, language)}${shown}`;
+  const text = `${count}${t(TEXT.many, language)}${shown}`;
+  // 40 characters at most for a heading: the "shown" part goes first.
+  return text.length <= 40 ? text : `${count}${t(TEXT.many, language)}`;
 }
 
 /** The feed states the widget shows: the chosen devices, or every feed. */

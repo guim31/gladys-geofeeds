@@ -65,7 +65,24 @@ async function readCapped(response, maxBytes, host) {
     }
     chunks.push(value);
   }
-  return new TextDecoder('utf-8').decode(Buffer.concat(chunks));
+  return decode(Buffer.concat(chunks), response.headers?.get?.('content-type'));
+}
+
+/**
+ * The text of a body: the charset of the Content-Type, else the encoding of
+ * the XML prolog (`<?xml … encoding="ISO-8859-1"?>`), else UTF-8.
+ */
+export function decode(bytes, contentType) {
+  const head = bytes.subarray(0, 200).toString('latin1');
+  const label =
+    /charset=["']?([\w.:-]+)/i.exec(contentType ?? '')?.[1] ??
+    /^\s*<\?xml[^>]*encoding=["']([\w.:-]+)["']/i.exec(head)?.[1] ??
+    'utf-8';
+  try {
+    return new TextDecoder(label).decode(bytes);
+  } catch {
+    return new TextDecoder('utf-8').decode(bytes);
+  }
 }
 
 /**
@@ -96,7 +113,8 @@ export async function fetchFeed(
     if (err?.name === 'TimeoutError' || signal.aborted) {
       throw new FeedError('timeout', `${host}: no answer in ${timeoutMs / 1000} s`);
     }
-    throw new FeedError('network', `${host}: ${err?.cause?.code ?? err?.message ?? 'unreachable'}`);
+    // Never err.message: undici copies the whole address (token, credentials) into it.
+    throw new FeedError('network', `${host}: ${err?.cause?.code ?? 'unreachable'}`);
   }
   if (response.status < 200 || response.status >= 300) {
     await response.body?.cancel?.().catch(() => {});
@@ -115,6 +133,6 @@ export async function fetchFeed(
     if (err?.name === 'TimeoutError' || signal.aborted) {
       throw new FeedError('timeout', `${host}: no answer in ${timeoutMs / 1000} s`);
     }
-    throw new FeedError('network', `${host}: ${err?.message ?? 'read failed'}`);
+    throw new FeedError('network', `${host}: read failed`);
   }
 }

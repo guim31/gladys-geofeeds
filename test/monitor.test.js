@@ -286,3 +286,48 @@ test('a burst of new events is capped per reading', async (t) => {
   await cycle(w);
   assert.equal(w.fake.sceneEvents.length, 20);
 });
+
+test('houses unreadable for a while: the followed events are kept, nothing fires', async (t) => {
+  const w = await world(t);
+  const before = followedKeys(w);
+  await w.app.stop();
+  // A new start on the same /data, while Gladys does not answer the houses.
+  const failing = await createWorld({ server: w.server, dataDir: w.dataDir, connect: false });
+  t.after(() => failing.app.stop());
+  t.mock.method(failing.gladys, 'getHouses', async () => {
+    throw new Error('Gladys restarting');
+  });
+  await failing.gladys.connect();
+  await failing.app.ready;
+  await failing.monitor.running;
+  assert.deepEqual(failing.fake.sceneEvents, []);
+  t.mock.restoreAll();
+  failing.monitor.houseReadAt = -Infinity;
+  await cycle(failing);
+  assert.deepEqual(followedKeys(failing), before);
+  assert.deepEqual(failing.fake.sceneEvents, []);
+});
+
+test('an event back among the first 500 is not news', async (t) => {
+  const server = createServer();
+  const document = server.usgs();
+  const base = document.features.find((f) => f.id === NEAR);
+  // 600 events; the 100 nearest go away: the far ones come back into the first 500.
+  document.features = Array.from({ length: 600 }, (_, i) => {
+    const feature = structuredClone(base);
+    feature.id = `many${i}`;
+    feature.geometry.coordinates = [-149.9, 61.2 + i * 0.01, 10];
+    return feature;
+  });
+  server.setUsgs(document);
+  const w = await world(t, { server, config: { ...USGS_CONFIG, feed_1_radius: '0' } });
+  const later = server.usgs();
+  later.features = later.features.slice(100);
+  server.setUsgs(later);
+  await cycle(w);
+  assert.equal(
+    w.fake.sceneEvents.filter((e) => e.key === TRIGGERS.NEW).length,
+    0,
+    'no new_event for events already followed',
+  );
+});

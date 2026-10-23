@@ -9,6 +9,9 @@
 // -----------------------------------------------------------------------------
 
 const MAX_DEPTH = 64;
+// Elements read at most: 5 MB of tiny elements would exhaust the 256 MB of
+// the sandbox; real feeds stay far below (GDACS: about 30,000 for 1 MB).
+export const MAX_NODES = 200000;
 
 const NAMED = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
 
@@ -52,6 +55,7 @@ export function parseXml(source) {
   const stack = [root];
   const top = () => stack[stack.length - 1];
   let index = 0;
+  let nodes = 0;
   const length = source.length;
   while (index < length) {
     const open = source.indexOf('<', index);
@@ -108,6 +112,10 @@ export function parseXml(source) {
         top().text += '<';
         index = open + 1;
         continue;
+      }
+      nodes += 1;
+      if (nodes > MAX_NODES) {
+        throw new Error(`more than ${MAX_NODES} XML elements`);
       }
       const node = {
         name: nameMatch[0],

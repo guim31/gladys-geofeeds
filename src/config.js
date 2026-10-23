@@ -70,7 +70,13 @@ export function parseFeedUrl(value) {
   }
   try {
     const url = new URL(text);
-    return ['http:', 'https:'].includes(url.protocol) && !/\s/.test(text) ? url.href : null;
+    // No user:password@: fetch refuses it, and it would be a secret in the configuration.
+    return ['http:', 'https:'].includes(url.protocol) &&
+      !/\s/.test(text) &&
+      url.username === '' &&
+      url.password === ''
+      ? url.href
+      : null;
   } catch {
     return null;
   }

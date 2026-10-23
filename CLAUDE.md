@@ -263,3 +263,12 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Le lecteur XML ignore le DOCTYPE : aucune entité définie, aucune expansion (XXE, « billion
   laughs »). Les propriétés XML d'un élément sont ses enfants simples, hors champs déjà lus.
 - Sortie `nearest_km` de l'action : 20038 (`NO_EVENT_KM`) sans événement, comme la fonctionnalité.
+- **Fuite d'adresse** : le `fetch` de Node (undici) recopie l'adresse entière (jeton, `user:pass@`)
+  dans `err.message` de certaines erreurs : ne journaliser que l'hôte et `err.cause.code`.
+  `user:pass@` est refusé dans la configuration (fetch le refuse de toute façon).
+- **Flux hostiles** : entrées bornées avant toute regex (`plainText`, `toNumber`), regex sans
+  retour arrière quadratique, 200 000 éléments XML au plus (5 Mo de `<a/>` dépassaient 256 Mo),
+  profondeur des GeometryCollection limitée. Les flux sont lus en parallèle (actions ≤ 120 s).
+- **Centre inconnu** (maisons illisibles au démarrage) : la lecture ne touche pas aux événements
+  suivis, sinon une rafale de « disparu » puis de « nouveau ». Au-delà de 500 suivis, seules les
+  clés sont gardées (5 000), pour qu'un événement qui remonte ne soit pas « nouveau ».
