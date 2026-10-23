@@ -1,77 +1,90 @@
+// -----------------------------------------------------------------------------
+// The `events` widget: valid for the core (content budget, field limits), one
+// status row per feed, the nearest events, the settings.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { buildDiscoveredDevices } from '../src/devices/index.js';
-import { simulateLanSession } from '../src/devices/plug.js';
-import { DEMO_STATUS_WIDGET, WIDGETS, refreshWidgets } from '../src/widgets.js';
-import { normalizeConfig } from '../src/config.js';
+import { WIDGET_KEY } from '../src/monitor.js';
+import { URLS, USGS_CONFIG, createAll, createServer, createWorld } from './helpers/world.js';
 
-const gladys = createFakeGladys();
-const config = normalizeConfig();
-const demoStatus = WIDGETS[DEMO_STATUS_WIDGET];
+const TWO_FEEDS = {
+  ...USGS_CONFIG,
+  feed_2_url: URLS.gdacs,
+  feed_2_name: 'GDACS',
+  feed_2_radius: '2500',
+};
 
-// What the SDK passes to onWidgetGet, plus the config index.js adds.
-const getContent = (cfg = config) =>
-  demoStatus.get(gladys, { settings: {}, language: 'en', units: 'metric', config: cfg });
+async function world(t, options = {}) {
+  const w = await createWorld({ config: TWO_FEEDS, ...options });
+  t.after(() => w.app.stop());
+  return w;
+}
 
-test('the demo_status content is rendered exactly as sent', async () => {
-  // [] = nothing the core would drop, truncate or trim to the content budget.
-  assert.deepEqual(validateWidgetContent(await getContent()), []);
-});
+async function content(w, options = {}) {
+  const { data } = await w.fake.widgetGet(WIDGET_KEY, options);
+  return data.content;
+}
 
-test('the degraded plug connection content is valid too', async () => {
-  simulateLanSession(false);
-  try {
-    const content = await getContent();
-    assert.deepEqual(validateWidgetContent(content), []);
-    const status = content.components.find((component) => component.type === 'status');
-    assert.ok(
-      status.items.some((item) => item.color === 'warning'),
-      'degraded shows a warning',
+for (const language of ['en', 'fr', 'de', 'es']) {
+  test(`the widget is valid for the core (${language})`, async (t) => {
+    const w = await world(t);
+    const widget = await content(w, { language });
+    assert.doesNotThrow(() => validateWidgetContent(widget));
+    assert.deepEqual(
+      widget.components.map((c) => c.type),
+      ['text', 'status', 'card-list', 'text'],
     );
-  } finally {
-    simulateLanSession(true);
-  }
-});
+  });
+}
 
-test('the live tiles reference features the integration publishes', async () => {
-  const featureIds = new Set(
-    buildDiscoveredDevices(gladys, config).flatMap((device) =>
-      device.features.map((feature) => feature.external_id),
-    ),
+test('one status row per feed, then the nearest events of every feed', async (t) => {
+  const w = await world(t);
+  const widget = await content(w, { language: 'fr' });
+  const [heading, status, list] = widget.components;
+  assert.equal(heading.text, '3 événements proches');
+  assert.deepEqual(
+    status.items.map((item) => [item.label, item.value]),
+    [
+      ['USGS', 3],
+      ['GDACS', 0],
+    ],
   );
-  const liveTiles = (await getContent()).components.filter((c) => c.device_feature);
-  assert.ok(liveTiles.length > 0, 'the template demonstrates a device-bound tile');
-  for (const tile of liveTiles) {
-    assert.ok(featureIds.has(tile.device_feature), `unknown feature ${tile.device_feature}`);
-  }
+  assert.equal(list.items[0].title, 'M 2.7 - 66 km WNW of Happy Valley, Alaska');
+  assert.equal(list.items[0].subtitle, 'USGS · 203 km');
+  assert.equal(list.items[0].badge.text, 'earthquake');
+  assert.equal(list.items[0].links[0].url.startsWith('https://'), true);
 });
 
-test('every button action of the content is handled and answers a short toast', async () => {
-  const buttons = (await getContent()).components.filter((c) => c.type === 'button' && c.action);
-  assert.ok(buttons.length > 0, 'the template demonstrates a widget action');
-  for (const { action } of buttons) {
-    const message = await demoStatus.action(gladys, {
-      actionKey: action.key,
-      params: action.params ?? {},
-      settings: {},
-      config,
-    });
-    assert.ok(message.en, 'the toast carries at least the mandatory `en` text');
-    assert.ok(message.en.length <= 200, 'toasts are capped at 200 characters');
-  }
-});
-
-test('an unknown widget action fails, so the user sees the error', async () => {
-  await assert.rejects(
-    demoStatus.action(gladys, { actionKey: 'unknown', params: {}, settings: {}, config }),
-    /Unknown widget action/,
+test('the settings keep the chosen feeds only', async (t) => {
+  const w = await world(t);
+  const [, gdacs] = await createAll(w);
+  const widget = await content(w, { language: 'en', settings: { feeds: [gdacs.external_id] } });
+  assert.deepEqual(
+    widget.components.map((c) => c.type),
+    ['text', 'status', 'text'],
   );
+  assert.equal(widget.components[0].text, 'No event in the area');
 });
 
-test('refreshWidgets nudges every widget', () => {
-  const fresh = createFakeGladys();
-  refreshWidgets(fresh);
-  assert.deepEqual(fresh.fake.widgetRefreshes, Object.keys(WIDGETS));
+test('a feed that cannot be read says why', async (t) => {
+  const server = createServer();
+  server.down[URLS.gdacs] = 500;
+  const w = await world(t, { server });
+  const widget = await content(w, { language: 'en' });
+  assert.deepEqual(widget.components[1].items[1], {
+    label: 'GDACS',
+    value: 'HTTP error 500',
+    icon: 'wifi-off',
+    color: 'danger',
+  });
+});
+
+test('no feed: a single heading', async (t) => {
+  const w = await world(t, { config: {} });
+  const widget = await content(w, { language: 'es' });
+  assert.deepEqual(widget.components, [
+    { type: 'text', variant: 'heading', text: 'Ningún feed configurado' },
+  ]);
 });

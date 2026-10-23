@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+index.js                          SDK wiring only (shutdown, connect)
+src/app.js                        every SDK handler, registered before connect()
+src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization (5 feed slots)
+src/http.js                       GET of a feed: timeout, 5 MB cap, redirects, error kinds
+src/xml.js                        tiny XML reader (no DOCTYPE, no entity expansion)
+src/parse.js                      GeoJSON / RSS / Atom / GeoRSS / W3C geo → plain located events
+src/monitor.js                    readings, filters, scene triggers, states, transport badges, status
+src/device.js                     one device per feed slot, its features
+src/actions.js                    scene action read_events, configuration action check_now
+src/widgets.js                    dashboard widget `events`
+src/messages.js, src/geo.js       texts (en, fr, de, es), haversine distance
+src/store.js                      followed events per feed, under /data
+gladys-assistant-integration.json manifest: name, config_schema, actions, triggers, widget...
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/fixtures/feeds/              real feeds recorded on 23/10/2026 (see its README)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +76,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, manifest texts, widget texts, and `docs/{en,fr,de,es}.md`, kept in
+  sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +240,26 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Flux GeoJSON / GeoRSS (cette intégration)
+
+- **Cinq emplacements fixes** `feed_1_…` à `feed_5_…` dans la configuration (pas d'actions d'ajout :
+  une action n'applique aucun `default`, #3154/#3155). L'appareil est clé sur l'emplacement
+  (`feed:slot-N`) : changer l'adresse d'un emplacement garde l'appareil et repart de zéro pour les
+  événements suivis (aucun déclencheur à la première lecture). Les clés `feed_N_*` sont figées.
+- **Joignable** = badge `publishTransports` (`cloud` / `unreachable`), pas une fonctionnalité : la
+  table du front n'a pas de couple « connectivité ». Piège du SDK : `message` n'est accepté qu'avec
+  `degraded: true`, sinon `publishTransports` lève une erreur ; la raison va donc dans l'état de
+  connexion et le widget.
+- Filtre de scène `feed` en `source: "devices"` (présent dès la 5.1.0, vérifié dans `v5.1.0`) : la
+  valeur publiée est l'`external_id` de l'appareil.
+- **Dates** : NSW RFS publie `pubDate` « 23/10/2026 2:49:00 PM », locale sans fuseau : non devinée
+  (null), l'événement reste gardé par l'âge maximal. Un `Date.parse` naïf la lirait en
+  mois/jour faux ou NaN.
+- **Clé d'un événement** : `id`/`guid`, sinon empreinte SHA-1 (titre, lien, position à 1e-4°) ; un
+  événement qui bouge sans identifiant devient donc un nouvel événement.
+- Distance au **centre** d'une zone (moyenne des sommets de l'anneau extérieur), comme demandé par
+  le brief ; HA mesure au point le plus proche. Dit dans les limites de la doc.
+- Le lecteur XML ignore le DOCTYPE : aucune entité définie, aucune expansion (XXE, « billion
+  laughs »). Les propriétés XML d'un élément sont ses enfants simples, hors champs déjà lus.
+- Sortie `nearest_km` de l'action : 20038 (`NO_EVENT_KM`) sans événement, comme la fonctionnalité.

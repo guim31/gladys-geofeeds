@@ -1,177 +1,1953 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "GeoJSON & GeoRSS feeds",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Located events (earthquakes, fires, alerts) from GeoJSON or GeoRSS feeds, near your home.",
+    "fr": "Événements géolocalisés (séismes, incendies, alertes) de flux GeoJSON ou GeoRSS, près de chez vous.",
+    "de": "Verortete Ereignisse (Erdbeben, Brände, Warnungen) aus GeoJSON- oder GeoRSS-Feeds, nahe deinem Haus.",
+    "es": "Eventos geolocalizados (terremotos, incendios, alertas) de feeds GeoJSON o GeoRSS, cerca de su casa."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-geofeeds:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-geofeeds/main/cover.png",
+  "categories": ["environment", "security"],
+  "transports": ["cloud"],
+  "location": true,
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your feeds",
+        "fr": "Vos flux",
+        "de": "Deine Feeds",
+        "es": "Sus feeds"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Paste the address of up to five feeds of located events: GeoJSON, GeoRSS, RSS or Atom (earthquakes, fires, alerts of a local service…). Each feed becomes a device: save, then create it in the Discover tab.",
+        "fr": "Collez l'adresse de cinq flux d'événements géolocalisés au plus : GeoJSON, GeoRSS, RSS ou Atom (séismes, incendies, alertes d'un service local…). Chaque flux devient un appareil : enregistrez, puis créez-le dans l'onglet Découverte.",
+        "de": "Füge die Adresse von bis zu fünf Feeds mit verorteten Ereignissen ein: GeoJSON, GeoRSS, RSS oder Atom (Erdbeben, Brände, Warnungen eines örtlichen Dienstes…). Jeder Feed wird ein Gerät: Speichere und lege es dann im Tab „Entdecken“ an.",
+        "es": "Pegue la dirección de hasta cinco feeds de eventos geolocalizados: GeoJSON, GeoRSS, RSS o Atom (terremotos, incendios, alertas de un servicio local…). Cada feed se convierte en un dispositivo: guarde y créelo en la pestaña Descubrir."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-geofeeds/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Installationsanleitung",
+            "es": "Guía de instalación"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "feed_1",
+      "type": "section",
+      "label": {
+        "en": "Feed 1",
+        "fr": "Flux 1",
+        "de": "Feed 1",
+        "es": "Feed 1"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "Example: the earthquakes of the last day from the USGS, https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson",
+        "fr": "Exemple : les séismes du dernier jour de l'USGS, https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson",
+        "de": "Beispiel: die Erdbeben des letzten Tages vom USGS, https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson",
+        "es": "Ejemplo: los terremotos del último día del USGS, https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson"
+      }
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "feed_1_url",
+      "type": "string",
+      "label": {
+        "en": "Feed address",
+        "fr": "Adresse du flux",
+        "de": "Feed-Adresse",
+        "es": "Dirección del feed"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "description": {
+        "en": "http or https. GeoJSON, GeoRSS, RSS 2.0 or Atom, 5 MB at most.",
+        "fr": "http ou https. GeoJSON, GeoRSS, RSS 2.0 ou Atom, 5 Mo au plus.",
+        "de": "http oder https. GeoJSON, GeoRSS, RSS 2.0 oder Atom, höchstens 5 MB.",
+        "es": "http o https. GeoJSON, GeoRSS, RSS 2.0 o Atom, 5 MB como máximo."
+      },
+      "placeholder": {
+        "en": "https://example.org/feed.geojson",
+        "fr": "https://example.org/flux.geojson",
+        "de": "https://example.org/feed.geojson",
+        "es": "https://example.org/feed.geojson"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "feed_1_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Shown in the widget and the scenes. Empty: the host of the address.",
+        "fr": "Affiché dans le widget et les scènes. Vide : l'hôte de l'adresse.",
+        "de": "Im Widget und in den Szenen angezeigt. Leer: der Host der Adresse.",
+        "es": "Se muestra en el widget y las escenas. Vacío: el host de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. USGS earthquakes",
+        "fr": "ex. Séismes USGS",
+        "de": "z. B. USGS-Erdbeben",
+        "es": "p. ej. Terremotos USGS"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_1_radius",
+      "type": "select",
+      "label": {
+        "en": "Radius",
+        "fr": "Rayon",
+        "de": "Radius",
+        "es": "Radio"
+      },
+      "description": {
+        "en": "Distance from the centre to the event (the centre of an area). Whole feed: every event, for a local feed.",
+        "fr": "Distance du centre à l'événement (le centre d'une zone). Tout le flux : tous les événements, pour un flux local.",
+        "de": "Entfernung vom Mittelpunkt zum Ereignis (die Mitte eines Gebiets). Ganzer Feed: alle Ereignisse, für einen lokalen Feed.",
+        "es": "Distancia del centro al evento (el centro de una zona). Todo el feed: todos los eventos, para un feed local."
+      },
+      "required": false,
+      "default": "50",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "0",
+          "label": {
+            "en": "Whole feed",
+            "fr": "Tout le flux",
+            "de": "Ganzer Feed",
+            "es": "Todo el feed"
+          }
+        },
+        {
+          "value": "5",
+          "label": {
+            "en": "5 km",
+            "fr": "5 km",
+            "de": "5 km",
+            "es": "5 km"
+          }
+        },
+        {
+          "value": "10",
+          "label": {
+            "en": "10 km",
+            "fr": "10 km",
+            "de": "10 km",
+            "es": "10 km"
+          }
+        },
+        {
+          "value": "25",
+          "label": {
+            "en": "25 km",
+            "fr": "25 km",
+            "de": "25 km",
+            "es": "25 km"
+          }
+        },
+        {
+          "value": "50",
+          "label": {
+            "en": "50 km",
+            "fr": "50 km",
+            "de": "50 km",
+            "es": "50 km"
+          }
+        },
+        {
+          "value": "100",
+          "label": {
+            "en": "100 km",
+            "fr": "100 km",
+            "de": "100 km",
+            "es": "100 km"
+          }
+        },
+        {
+          "value": "250",
+          "label": {
+            "en": "250 km",
+            "fr": "250 km",
+            "de": "250 km",
+            "es": "250 km"
+          }
+        },
+        {
+          "value": "500",
+          "label": {
+            "en": "500 km",
+            "fr": "500 km",
+            "de": "500 km",
+            "es": "500 km"
+          }
+        },
+        {
+          "value": "1000",
+          "label": {
+            "en": "1 000 km",
+            "fr": "1 000 km",
+            "de": "1 000 km",
+            "es": "1 000 km"
+          }
+        },
+        {
+          "value": "2500",
+          "label": {
+            "en": "2 500 km",
+            "fr": "2 500 km",
+            "de": "2 500 km",
+            "es": "2 500 km"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "feed_1_categories",
+      "type": "string",
+      "label": {
+        "en": "Categories (optional)",
+        "fr": "Catégories (facultatif)",
+        "de": "Kategorien (optional)",
+        "es": "Categorías (opcional)"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Keep only the events whose category contains one of these words, separated by commas.",
+        "fr": "Ne garder que les événements dont la catégorie contient l'un de ces mots, séparés par des virgules.",
+        "de": "Nur die Ereignisse behalten, deren Kategorie eines dieser Wörter enthält, durch Kommas getrennt.",
+        "es": "Conservar solo los eventos cuya categoría contenga una de estas palabras, separadas por comas."
+      },
+      "placeholder": {
+        "en": "e.g. Emergency, Watch and Act",
+        "fr": "ex. Emergency, Watch and Act",
+        "de": "z. B. Emergency, Watch and Act",
+        "es": "p. ej. Emergency, Watch and Act"
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": ""
+    },
+    {
+      "key": "feed_1_property",
+      "type": "string",
+      "label": {
+        "en": "Numeric property (optional)",
+        "fr": "Propriété numérique (facultatif)",
+        "de": "Zahlen-Eigenschaft (optional)",
+        "es": "Propiedad numérica (opcional)"
+      },
+      "description": {
+        "en": "Name of a numeric property of the events (mag for the USGS): sent to the scenes as value, and filtered by the minimum below.",
+        "fr": "Nom d'une propriété numérique des événements (mag pour l'USGS) : envoyée aux scènes comme valeur, et filtrée par le minimum ci-dessous.",
+        "de": "Name einer Zahlen-Eigenschaft der Ereignisse (mag beim USGS): als Wert an die Szenen gesendet und mit dem Minimum unten gefiltert.",
+        "es": "Nombre de una propiedad numérica de los eventos (mag para el USGS): se envía a las escenas como valor y se filtra con el mínimo de abajo."
+      },
+      "placeholder": {
+        "en": "e.g. mag",
+        "fr": "ex. mag",
+        "de": "z. B. mag",
+        "es": "p. ej. mag"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_1_min_value",
+      "type": "string",
+      "label": {
+        "en": "Minimum value (optional)",
+        "fr": "Valeur minimale (facultatif)",
+        "de": "Mindestwert (optional)",
+        "es": "Valor mínimo (opcional)"
+      },
+      "description": {
+        "en": "Events whose property is lower, or missing, are ignored.",
+        "fr": "Les événements dont la propriété est plus basse, ou absente, sont ignorés.",
+        "de": "Ereignisse mit kleinerer oder fehlender Eigenschaft werden ignoriert.",
+        "es": "Se ignoran los eventos cuya propiedad sea menor o falte."
+      },
+      "placeholder": {
+        "en": "e.g. 4.5",
+        "fr": "ex. 4,5",
+        "de": "z. B. 4,5",
+        "es": "p. ej. 4,5"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_2",
+      "type": "section",
+      "label": {
+        "en": "Feed 2",
+        "fr": "Flux 2",
+        "de": "Feed 2",
+        "es": "Feed 2"
+      },
+      "description": {
+        "en": "Optional: leave the address empty if not used.",
+        "fr": "Facultatif : laissez l'adresse vide s'il ne sert pas.",
+        "de": "Optional: Lass die Adresse leer, wenn du ihn nicht brauchst.",
+        "es": "Opcional: deje la dirección vacía si no lo usa."
+      }
+    },
+    {
+      "key": "feed_2_url",
+      "type": "string",
+      "label": {
+        "en": "Feed address",
+        "fr": "Adresse du flux",
+        "de": "Feed-Adresse",
+        "es": "Dirección del feed"
+      },
+      "description": {
+        "en": "http or https. GeoJSON, GeoRSS, RSS 2.0 or Atom, 5 MB at most.",
+        "fr": "http ou https. GeoJSON, GeoRSS, RSS 2.0 ou Atom, 5 Mo au plus.",
+        "de": "http oder https. GeoJSON, GeoRSS, RSS 2.0 oder Atom, höchstens 5 MB.",
+        "es": "http o https. GeoJSON, GeoRSS, RSS 2.0 o Atom, 5 MB como máximo."
+      },
+      "placeholder": {
+        "en": "https://example.org/feed.geojson",
+        "fr": "https://example.org/flux.geojson",
+        "de": "https://example.org/feed.geojson",
+        "es": "https://example.org/feed.geojson"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_2_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Shown in the widget and the scenes. Empty: the host of the address.",
+        "fr": "Affiché dans le widget et les scènes. Vide : l'hôte de l'adresse.",
+        "de": "Im Widget und in den Szenen angezeigt. Leer: der Host der Adresse.",
+        "es": "Se muestra en el widget y las escenas. Vacío: el host de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. USGS earthquakes",
+        "fr": "ex. Séismes USGS",
+        "de": "z. B. USGS-Erdbeben",
+        "es": "p. ej. Terremotos USGS"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_2_radius",
+      "type": "select",
+      "label": {
+        "en": "Radius",
+        "fr": "Rayon",
+        "de": "Radius",
+        "es": "Radio"
+      },
+      "description": {
+        "en": "Distance from the centre to the event (the centre of an area). Whole feed: every event, for a local feed.",
+        "fr": "Distance du centre à l'événement (le centre d'une zone). Tout le flux : tous les événements, pour un flux local.",
+        "de": "Entfernung vom Mittelpunkt zum Ereignis (die Mitte eines Gebiets). Ganzer Feed: alle Ereignisse, für einen lokalen Feed.",
+        "es": "Distancia del centro al evento (el centro de una zona). Todo el feed: todos los eventos, para un feed local."
+      },
+      "required": false,
+      "default": "50",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "Whole feed",
+            "fr": "Tout le flux",
+            "de": "Ganzer Feed",
+            "es": "Todo el feed"
+          }
+        },
+        {
+          "value": "5",
+          "label": {
+            "en": "5 km",
+            "fr": "5 km",
+            "de": "5 km",
+            "es": "5 km"
+          }
+        },
+        {
+          "value": "10",
+          "label": {
+            "en": "10 km",
+            "fr": "10 km",
+            "de": "10 km",
+            "es": "10 km"
+          }
+        },
+        {
+          "value": "25",
+          "label": {
+            "en": "25 km",
+            "fr": "25 km",
+            "de": "25 km",
+            "es": "25 km"
+          }
+        },
+        {
+          "value": "50",
+          "label": {
+            "en": "50 km",
+            "fr": "50 km",
+            "de": "50 km",
+            "es": "50 km"
+          }
+        },
+        {
+          "value": "100",
+          "label": {
+            "en": "100 km",
+            "fr": "100 km",
+            "de": "100 km",
+            "es": "100 km"
+          }
+        },
+        {
+          "value": "250",
+          "label": {
+            "en": "250 km",
+            "fr": "250 km",
+            "de": "250 km",
+            "es": "250 km"
+          }
+        },
+        {
+          "value": "500",
+          "label": {
+            "en": "500 km",
+            "fr": "500 km",
+            "de": "500 km",
+            "es": "500 km"
+          }
+        },
+        {
+          "value": "1000",
+          "label": {
+            "en": "1 000 km",
+            "fr": "1 000 km",
+            "de": "1 000 km",
+            "es": "1 000 km"
+          }
+        },
+        {
+          "value": "2500",
+          "label": {
+            "en": "2 500 km",
+            "fr": "2 500 km",
+            "de": "2 500 km",
+            "es": "2 500 km"
+          }
+        }
+      ]
+    },
+    {
+      "key": "feed_2_categories",
+      "type": "string",
+      "label": {
+        "en": "Categories (optional)",
+        "fr": "Catégories (facultatif)",
+        "de": "Kategorien (optional)",
+        "es": "Categorías (opcional)"
+      },
+      "description": {
+        "en": "Keep only the events whose category contains one of these words, separated by commas.",
+        "fr": "Ne garder que les événements dont la catégorie contient l'un de ces mots, séparés par des virgules.",
+        "de": "Nur die Ereignisse behalten, deren Kategorie eines dieser Wörter enthält, durch Kommas getrennt.",
+        "es": "Conservar solo los eventos cuya categoría contenga una de estas palabras, separadas por comas."
+      },
+      "placeholder": {
+        "en": "e.g. Emergency, Watch and Act",
+        "fr": "ex. Emergency, Watch and Act",
+        "de": "z. B. Emergency, Watch and Act",
+        "es": "p. ej. Emergency, Watch and Act"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_2_property",
+      "type": "string",
+      "label": {
+        "en": "Numeric property (optional)",
+        "fr": "Propriété numérique (facultatif)",
+        "de": "Zahlen-Eigenschaft (optional)",
+        "es": "Propiedad numérica (opcional)"
+      },
+      "description": {
+        "en": "Name of a numeric property of the events (mag for the USGS): sent to the scenes as value, and filtered by the minimum below.",
+        "fr": "Nom d'une propriété numérique des événements (mag pour l'USGS) : envoyée aux scènes comme valeur, et filtrée par le minimum ci-dessous.",
+        "de": "Name einer Zahlen-Eigenschaft der Ereignisse (mag beim USGS): als Wert an die Szenen gesendet und mit dem Minimum unten gefiltert.",
+        "es": "Nombre de una propiedad numérica de los eventos (mag para el USGS): se envía a las escenas como valor y se filtra con el mínimo de abajo."
+      },
+      "placeholder": {
+        "en": "e.g. mag",
+        "fr": "ex. mag",
+        "de": "z. B. mag",
+        "es": "p. ej. mag"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_2_min_value",
+      "type": "string",
+      "label": {
+        "en": "Minimum value (optional)",
+        "fr": "Valeur minimale (facultatif)",
+        "de": "Mindestwert (optional)",
+        "es": "Valor mínimo (opcional)"
+      },
+      "description": {
+        "en": "Events whose property is lower, or missing, are ignored.",
+        "fr": "Les événements dont la propriété est plus basse, ou absente, sont ignorés.",
+        "de": "Ereignisse mit kleinerer oder fehlender Eigenschaft werden ignoriert.",
+        "es": "Se ignoran los eventos cuya propiedad sea menor o falte."
+      },
+      "placeholder": {
+        "en": "e.g. 4.5",
+        "fr": "ex. 4,5",
+        "de": "z. B. 4,5",
+        "es": "p. ej. 4,5"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_3",
+      "type": "section",
+      "label": {
+        "en": "Feed 3",
+        "fr": "Flux 3",
+        "de": "Feed 3",
+        "es": "Feed 3"
+      },
+      "description": {
+        "en": "Optional: leave the address empty if not used.",
+        "fr": "Facultatif : laissez l'adresse vide s'il ne sert pas.",
+        "de": "Optional: Lass die Adresse leer, wenn du ihn nicht brauchst.",
+        "es": "Opcional: deje la dirección vacía si no lo usa."
+      }
+    },
+    {
+      "key": "feed_3_url",
+      "type": "string",
+      "label": {
+        "en": "Feed address",
+        "fr": "Adresse du flux",
+        "de": "Feed-Adresse",
+        "es": "Dirección del feed"
+      },
+      "description": {
+        "en": "http or https. GeoJSON, GeoRSS, RSS 2.0 or Atom, 5 MB at most.",
+        "fr": "http ou https. GeoJSON, GeoRSS, RSS 2.0 ou Atom, 5 Mo au plus.",
+        "de": "http oder https. GeoJSON, GeoRSS, RSS 2.0 oder Atom, höchstens 5 MB.",
+        "es": "http o https. GeoJSON, GeoRSS, RSS 2.0 o Atom, 5 MB como máximo."
+      },
+      "placeholder": {
+        "en": "https://example.org/feed.geojson",
+        "fr": "https://example.org/flux.geojson",
+        "de": "https://example.org/feed.geojson",
+        "es": "https://example.org/feed.geojson"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_3_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Shown in the widget and the scenes. Empty: the host of the address.",
+        "fr": "Affiché dans le widget et les scènes. Vide : l'hôte de l'adresse.",
+        "de": "Im Widget und in den Szenen angezeigt. Leer: der Host der Adresse.",
+        "es": "Se muestra en el widget y las escenas. Vacío: el host de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. USGS earthquakes",
+        "fr": "ex. Séismes USGS",
+        "de": "z. B. USGS-Erdbeben",
+        "es": "p. ej. Terremotos USGS"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_3_radius",
+      "type": "select",
+      "label": {
+        "en": "Radius",
+        "fr": "Rayon",
+        "de": "Radius",
+        "es": "Radio"
+      },
+      "description": {
+        "en": "Distance from the centre to the event (the centre of an area). Whole feed: every event, for a local feed.",
+        "fr": "Distance du centre à l'événement (le centre d'une zone). Tout le flux : tous les événements, pour un flux local.",
+        "de": "Entfernung vom Mittelpunkt zum Ereignis (die Mitte eines Gebiets). Ganzer Feed: alle Ereignisse, für einen lokalen Feed.",
+        "es": "Distancia del centro al evento (el centro de una zona). Todo el feed: todos los eventos, para un feed local."
+      },
+      "required": false,
+      "default": "50",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "Whole feed",
+            "fr": "Tout le flux",
+            "de": "Ganzer Feed",
+            "es": "Todo el feed"
+          }
+        },
+        {
+          "value": "5",
+          "label": {
+            "en": "5 km",
+            "fr": "5 km",
+            "de": "5 km",
+            "es": "5 km"
+          }
+        },
+        {
+          "value": "10",
+          "label": {
+            "en": "10 km",
+            "fr": "10 km",
+            "de": "10 km",
+            "es": "10 km"
+          }
+        },
+        {
+          "value": "25",
+          "label": {
+            "en": "25 km",
+            "fr": "25 km",
+            "de": "25 km",
+            "es": "25 km"
+          }
+        },
+        {
+          "value": "50",
+          "label": {
+            "en": "50 km",
+            "fr": "50 km",
+            "de": "50 km",
+            "es": "50 km"
+          }
+        },
+        {
+          "value": "100",
+          "label": {
+            "en": "100 km",
+            "fr": "100 km",
+            "de": "100 km",
+            "es": "100 km"
+          }
+        },
+        {
+          "value": "250",
+          "label": {
+            "en": "250 km",
+            "fr": "250 km",
+            "de": "250 km",
+            "es": "250 km"
+          }
+        },
+        {
+          "value": "500",
+          "label": {
+            "en": "500 km",
+            "fr": "500 km",
+            "de": "500 km",
+            "es": "500 km"
+          }
+        },
+        {
+          "value": "1000",
+          "label": {
+            "en": "1 000 km",
+            "fr": "1 000 km",
+            "de": "1 000 km",
+            "es": "1 000 km"
+          }
+        },
+        {
+          "value": "2500",
+          "label": {
+            "en": "2 500 km",
+            "fr": "2 500 km",
+            "de": "2 500 km",
+            "es": "2 500 km"
+          }
+        }
+      ]
+    },
+    {
+      "key": "feed_3_categories",
+      "type": "string",
+      "label": {
+        "en": "Categories (optional)",
+        "fr": "Catégories (facultatif)",
+        "de": "Kategorien (optional)",
+        "es": "Categorías (opcional)"
+      },
+      "description": {
+        "en": "Keep only the events whose category contains one of these words, separated by commas.",
+        "fr": "Ne garder que les événements dont la catégorie contient l'un de ces mots, séparés par des virgules.",
+        "de": "Nur die Ereignisse behalten, deren Kategorie eines dieser Wörter enthält, durch Kommas getrennt.",
+        "es": "Conservar solo los eventos cuya categoría contenga una de estas palabras, separadas por comas."
+      },
+      "placeholder": {
+        "en": "e.g. Emergency, Watch and Act",
+        "fr": "ex. Emergency, Watch and Act",
+        "de": "z. B. Emergency, Watch and Act",
+        "es": "p. ej. Emergency, Watch and Act"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_3_property",
+      "type": "string",
+      "label": {
+        "en": "Numeric property (optional)",
+        "fr": "Propriété numérique (facultatif)",
+        "de": "Zahlen-Eigenschaft (optional)",
+        "es": "Propiedad numérica (opcional)"
+      },
+      "description": {
+        "en": "Name of a numeric property of the events (mag for the USGS): sent to the scenes as value, and filtered by the minimum below.",
+        "fr": "Nom d'une propriété numérique des événements (mag pour l'USGS) : envoyée aux scènes comme valeur, et filtrée par le minimum ci-dessous.",
+        "de": "Name einer Zahlen-Eigenschaft der Ereignisse (mag beim USGS): als Wert an die Szenen gesendet und mit dem Minimum unten gefiltert.",
+        "es": "Nombre de una propiedad numérica de los eventos (mag para el USGS): se envía a las escenas como valor y se filtra con el mínimo de abajo."
+      },
+      "placeholder": {
+        "en": "e.g. mag",
+        "fr": "ex. mag",
+        "de": "z. B. mag",
+        "es": "p. ej. mag"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_3_min_value",
+      "type": "string",
+      "label": {
+        "en": "Minimum value (optional)",
+        "fr": "Valeur minimale (facultatif)",
+        "de": "Mindestwert (optional)",
+        "es": "Valor mínimo (opcional)"
+      },
+      "description": {
+        "en": "Events whose property is lower, or missing, are ignored.",
+        "fr": "Les événements dont la propriété est plus basse, ou absente, sont ignorés.",
+        "de": "Ereignisse mit kleinerer oder fehlender Eigenschaft werden ignoriert.",
+        "es": "Se ignoran los eventos cuya propiedad sea menor o falte."
+      },
+      "placeholder": {
+        "en": "e.g. 4.5",
+        "fr": "ex. 4,5",
+        "de": "z. B. 4,5",
+        "es": "p. ej. 4,5"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_4",
+      "type": "section",
+      "label": {
+        "en": "Feed 4",
+        "fr": "Flux 4",
+        "de": "Feed 4",
+        "es": "Feed 4"
+      },
+      "description": {
+        "en": "Optional: leave the address empty if not used.",
+        "fr": "Facultatif : laissez l'adresse vide s'il ne sert pas.",
+        "de": "Optional: Lass die Adresse leer, wenn du ihn nicht brauchst.",
+        "es": "Opcional: deje la dirección vacía si no lo usa."
+      }
+    },
+    {
+      "key": "feed_4_url",
+      "type": "string",
+      "label": {
+        "en": "Feed address",
+        "fr": "Adresse du flux",
+        "de": "Feed-Adresse",
+        "es": "Dirección del feed"
+      },
+      "description": {
+        "en": "http or https. GeoJSON, GeoRSS, RSS 2.0 or Atom, 5 MB at most.",
+        "fr": "http ou https. GeoJSON, GeoRSS, RSS 2.0 ou Atom, 5 Mo au plus.",
+        "de": "http oder https. GeoJSON, GeoRSS, RSS 2.0 oder Atom, höchstens 5 MB.",
+        "es": "http o https. GeoJSON, GeoRSS, RSS 2.0 o Atom, 5 MB como máximo."
+      },
+      "placeholder": {
+        "en": "https://example.org/feed.geojson",
+        "fr": "https://example.org/flux.geojson",
+        "de": "https://example.org/feed.geojson",
+        "es": "https://example.org/feed.geojson"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_4_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Shown in the widget and the scenes. Empty: the host of the address.",
+        "fr": "Affiché dans le widget et les scènes. Vide : l'hôte de l'adresse.",
+        "de": "Im Widget und in den Szenen angezeigt. Leer: der Host der Adresse.",
+        "es": "Se muestra en el widget y las escenas. Vacío: el host de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. USGS earthquakes",
+        "fr": "ex. Séismes USGS",
+        "de": "z. B. USGS-Erdbeben",
+        "es": "p. ej. Terremotos USGS"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_4_radius",
+      "type": "select",
+      "label": {
+        "en": "Radius",
+        "fr": "Rayon",
+        "de": "Radius",
+        "es": "Radio"
+      },
+      "description": {
+        "en": "Distance from the centre to the event (the centre of an area). Whole feed: every event, for a local feed.",
+        "fr": "Distance du centre à l'événement (le centre d'une zone). Tout le flux : tous les événements, pour un flux local.",
+        "de": "Entfernung vom Mittelpunkt zum Ereignis (die Mitte eines Gebiets). Ganzer Feed: alle Ereignisse, für einen lokalen Feed.",
+        "es": "Distancia del centro al evento (el centro de una zona). Todo el feed: todos los eventos, para un feed local."
+      },
+      "required": false,
+      "default": "50",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "Whole feed",
+            "fr": "Tout le flux",
+            "de": "Ganzer Feed",
+            "es": "Todo el feed"
+          }
+        },
+        {
+          "value": "5",
+          "label": {
+            "en": "5 km",
+            "fr": "5 km",
+            "de": "5 km",
+            "es": "5 km"
+          }
+        },
+        {
+          "value": "10",
+          "label": {
+            "en": "10 km",
+            "fr": "10 km",
+            "de": "10 km",
+            "es": "10 km"
+          }
+        },
+        {
+          "value": "25",
+          "label": {
+            "en": "25 km",
+            "fr": "25 km",
+            "de": "25 km",
+            "es": "25 km"
+          }
+        },
+        {
+          "value": "50",
+          "label": {
+            "en": "50 km",
+            "fr": "50 km",
+            "de": "50 km",
+            "es": "50 km"
+          }
+        },
+        {
+          "value": "100",
+          "label": {
+            "en": "100 km",
+            "fr": "100 km",
+            "de": "100 km",
+            "es": "100 km"
+          }
+        },
+        {
+          "value": "250",
+          "label": {
+            "en": "250 km",
+            "fr": "250 km",
+            "de": "250 km",
+            "es": "250 km"
+          }
+        },
+        {
+          "value": "500",
+          "label": {
+            "en": "500 km",
+            "fr": "500 km",
+            "de": "500 km",
+            "es": "500 km"
+          }
+        },
+        {
+          "value": "1000",
+          "label": {
+            "en": "1 000 km",
+            "fr": "1 000 km",
+            "de": "1 000 km",
+            "es": "1 000 km"
+          }
+        },
+        {
+          "value": "2500",
+          "label": {
+            "en": "2 500 km",
+            "fr": "2 500 km",
+            "de": "2 500 km",
+            "es": "2 500 km"
+          }
+        }
+      ]
+    },
+    {
+      "key": "feed_4_categories",
+      "type": "string",
+      "label": {
+        "en": "Categories (optional)",
+        "fr": "Catégories (facultatif)",
+        "de": "Kategorien (optional)",
+        "es": "Categorías (opcional)"
+      },
+      "description": {
+        "en": "Keep only the events whose category contains one of these words, separated by commas.",
+        "fr": "Ne garder que les événements dont la catégorie contient l'un de ces mots, séparés par des virgules.",
+        "de": "Nur die Ereignisse behalten, deren Kategorie eines dieser Wörter enthält, durch Kommas getrennt.",
+        "es": "Conservar solo los eventos cuya categoría contenga una de estas palabras, separadas por comas."
+      },
+      "placeholder": {
+        "en": "e.g. Emergency, Watch and Act",
+        "fr": "ex. Emergency, Watch and Act",
+        "de": "z. B. Emergency, Watch and Act",
+        "es": "p. ej. Emergency, Watch and Act"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_4_property",
+      "type": "string",
+      "label": {
+        "en": "Numeric property (optional)",
+        "fr": "Propriété numérique (facultatif)",
+        "de": "Zahlen-Eigenschaft (optional)",
+        "es": "Propiedad numérica (opcional)"
+      },
+      "description": {
+        "en": "Name of a numeric property of the events (mag for the USGS): sent to the scenes as value, and filtered by the minimum below.",
+        "fr": "Nom d'une propriété numérique des événements (mag pour l'USGS) : envoyée aux scènes comme valeur, et filtrée par le minimum ci-dessous.",
+        "de": "Name einer Zahlen-Eigenschaft der Ereignisse (mag beim USGS): als Wert an die Szenen gesendet und mit dem Minimum unten gefiltert.",
+        "es": "Nombre de una propiedad numérica de los eventos (mag para el USGS): se envía a las escenas como valor y se filtra con el mínimo de abajo."
+      },
+      "placeholder": {
+        "en": "e.g. mag",
+        "fr": "ex. mag",
+        "de": "z. B. mag",
+        "es": "p. ej. mag"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_4_min_value",
+      "type": "string",
+      "label": {
+        "en": "Minimum value (optional)",
+        "fr": "Valeur minimale (facultatif)",
+        "de": "Mindestwert (optional)",
+        "es": "Valor mínimo (opcional)"
+      },
+      "description": {
+        "en": "Events whose property is lower, or missing, are ignored.",
+        "fr": "Les événements dont la propriété est plus basse, ou absente, sont ignorés.",
+        "de": "Ereignisse mit kleinerer oder fehlender Eigenschaft werden ignoriert.",
+        "es": "Se ignoran los eventos cuya propiedad sea menor o falte."
+      },
+      "placeholder": {
+        "en": "e.g. 4.5",
+        "fr": "ex. 4,5",
+        "de": "z. B. 4,5",
+        "es": "p. ej. 4,5"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_5",
+      "type": "section",
+      "label": {
+        "en": "Feed 5",
+        "fr": "Flux 5",
+        "de": "Feed 5",
+        "es": "Feed 5"
+      },
+      "description": {
+        "en": "Optional: leave the address empty if not used.",
+        "fr": "Facultatif : laissez l'adresse vide s'il ne sert pas.",
+        "de": "Optional: Lass die Adresse leer, wenn du ihn nicht brauchst.",
+        "es": "Opcional: deje la dirección vacía si no lo usa."
+      }
+    },
+    {
+      "key": "feed_5_url",
+      "type": "string",
+      "label": {
+        "en": "Feed address",
+        "fr": "Adresse du flux",
+        "de": "Feed-Adresse",
+        "es": "Dirección del feed"
+      },
+      "description": {
+        "en": "http or https. GeoJSON, GeoRSS, RSS 2.0 or Atom, 5 MB at most.",
+        "fr": "http ou https. GeoJSON, GeoRSS, RSS 2.0 ou Atom, 5 Mo au plus.",
+        "de": "http oder https. GeoJSON, GeoRSS, RSS 2.0 oder Atom, höchstens 5 MB.",
+        "es": "http o https. GeoJSON, GeoRSS, RSS 2.0 o Atom, 5 MB como máximo."
+      },
+      "placeholder": {
+        "en": "https://example.org/feed.geojson",
+        "fr": "https://example.org/flux.geojson",
+        "de": "https://example.org/feed.geojson",
+        "es": "https://example.org/feed.geojson"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_5_name",
+      "type": "string",
+      "label": {
+        "en": "Name",
+        "fr": "Nom",
+        "de": "Name",
+        "es": "Nombre"
+      },
+      "description": {
+        "en": "Shown in the widget and the scenes. Empty: the host of the address.",
+        "fr": "Affiché dans le widget et les scènes. Vide : l'hôte de l'adresse.",
+        "de": "Im Widget und in den Szenen angezeigt. Leer: der Host der Adresse.",
+        "es": "Se muestra en el widget y las escenas. Vacío: el host de la dirección."
+      },
+      "placeholder": {
+        "en": "e.g. USGS earthquakes",
+        "fr": "ex. Séismes USGS",
+        "de": "z. B. USGS-Erdbeben",
+        "es": "p. ej. Terremotos USGS"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_5_radius",
+      "type": "select",
+      "label": {
+        "en": "Radius",
+        "fr": "Rayon",
+        "de": "Radius",
+        "es": "Radio"
+      },
+      "description": {
+        "en": "Distance from the centre to the event (the centre of an area). Whole feed: every event, for a local feed.",
+        "fr": "Distance du centre à l'événement (le centre d'une zone). Tout le flux : tous les événements, pour un flux local.",
+        "de": "Entfernung vom Mittelpunkt zum Ereignis (die Mitte eines Gebiets). Ganzer Feed: alle Ereignisse, für einen lokalen Feed.",
+        "es": "Distancia del centro al evento (el centro de una zona). Todo el feed: todos los eventos, para un feed local."
+      },
+      "required": false,
+      "default": "50",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "Whole feed",
+            "fr": "Tout le flux",
+            "de": "Ganzer Feed",
+            "es": "Todo el feed"
+          }
+        },
+        {
+          "value": "5",
+          "label": {
+            "en": "5 km",
+            "fr": "5 km",
+            "de": "5 km",
+            "es": "5 km"
+          }
+        },
+        {
+          "value": "10",
+          "label": {
+            "en": "10 km",
+            "fr": "10 km",
+            "de": "10 km",
+            "es": "10 km"
+          }
+        },
+        {
+          "value": "25",
+          "label": {
+            "en": "25 km",
+            "fr": "25 km",
+            "de": "25 km",
+            "es": "25 km"
+          }
+        },
+        {
+          "value": "50",
+          "label": {
+            "en": "50 km",
+            "fr": "50 km",
+            "de": "50 km",
+            "es": "50 km"
+          }
+        },
+        {
+          "value": "100",
+          "label": {
+            "en": "100 km",
+            "fr": "100 km",
+            "de": "100 km",
+            "es": "100 km"
+          }
+        },
+        {
+          "value": "250",
+          "label": {
+            "en": "250 km",
+            "fr": "250 km",
+            "de": "250 km",
+            "es": "250 km"
+          }
+        },
+        {
+          "value": "500",
+          "label": {
+            "en": "500 km",
+            "fr": "500 km",
+            "de": "500 km",
+            "es": "500 km"
+          }
+        },
+        {
+          "value": "1000",
+          "label": {
+            "en": "1 000 km",
+            "fr": "1 000 km",
+            "de": "1 000 km",
+            "es": "1 000 km"
+          }
+        },
+        {
+          "value": "2500",
+          "label": {
+            "en": "2 500 km",
+            "fr": "2 500 km",
+            "de": "2 500 km",
+            "es": "2 500 km"
+          }
+        }
+      ]
+    },
+    {
+      "key": "feed_5_categories",
+      "type": "string",
+      "label": {
+        "en": "Categories (optional)",
+        "fr": "Catégories (facultatif)",
+        "de": "Kategorien (optional)",
+        "es": "Categorías (opcional)"
+      },
+      "description": {
+        "en": "Keep only the events whose category contains one of these words, separated by commas.",
+        "fr": "Ne garder que les événements dont la catégorie contient l'un de ces mots, séparés par des virgules.",
+        "de": "Nur die Ereignisse behalten, deren Kategorie eines dieser Wörter enthält, durch Kommas getrennt.",
+        "es": "Conservar solo los eventos cuya categoría contenga una de estas palabras, separadas por comas."
+      },
+      "placeholder": {
+        "en": "e.g. Emergency, Watch and Act",
+        "fr": "ex. Emergency, Watch and Act",
+        "de": "z. B. Emergency, Watch and Act",
+        "es": "p. ej. Emergency, Watch and Act"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_5_property",
+      "type": "string",
+      "label": {
+        "en": "Numeric property (optional)",
+        "fr": "Propriété numérique (facultatif)",
+        "de": "Zahlen-Eigenschaft (optional)",
+        "es": "Propiedad numérica (opcional)"
+      },
+      "description": {
+        "en": "Name of a numeric property of the events (mag for the USGS): sent to the scenes as value, and filtered by the minimum below.",
+        "fr": "Nom d'une propriété numérique des événements (mag pour l'USGS) : envoyée aux scènes comme valeur, et filtrée par le minimum ci-dessous.",
+        "de": "Name einer Zahlen-Eigenschaft der Ereignisse (mag beim USGS): als Wert an die Szenen gesendet und mit dem Minimum unten gefiltert.",
+        "es": "Nombre de una propiedad numérica de los eventos (mag para el USGS): se envía a las escenas como valor y se filtra con el mínimo de abajo."
+      },
+      "placeholder": {
+        "en": "e.g. mag",
+        "fr": "ex. mag",
+        "de": "z. B. mag",
+        "es": "p. ej. mag"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "feed_5_min_value",
+      "type": "string",
+      "label": {
+        "en": "Minimum value (optional)",
+        "fr": "Valeur minimale (facultatif)",
+        "de": "Mindestwert (optional)",
+        "es": "Valor mínimo (opcional)"
+      },
+      "description": {
+        "en": "Events whose property is lower, or missing, are ignored.",
+        "fr": "Les événements dont la propriété est plus basse, ou absente, sont ignorés.",
+        "de": "Ereignisse mit kleinerer oder fehlender Eigenschaft werden ignoriert.",
+        "es": "Se ignoran los eventos cuya propiedad sea menor o falte."
+      },
+      "placeholder": {
+        "en": "e.g. 4.5",
+        "fr": "ex. 4,5",
+        "de": "z. B. 4,5",
+        "es": "p. ej. 4,5"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "latitude",
+      "type": "string",
+      "label": {
+        "en": "Centre latitude",
+        "fr": "Latitude du centre",
+        "de": "Breitengrad des Mittelpunkts",
+        "es": "Latitud del centro"
+      },
+      "description": {
+        "en": "Leave both coordinates empty to use the location of your house in Gladys.",
+        "fr": "Laissez les deux coordonnées vides pour utiliser la position de votre maison dans Gladys.",
+        "de": "Lass beide Koordinaten leer, um den Standort deines Hauses in Gladys zu verwenden.",
+        "es": "Deje ambas coordenadas vacías para usar la ubicación de su casa en Gladys."
+      },
+      "placeholder": {
+        "en": "e.g. 43.6045",
+        "fr": "ex. 43,6045",
+        "de": "z. B. 43.6045",
+        "es": "p. ej. 43.6045"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "longitude",
+      "type": "string",
+      "label": {
+        "en": "Centre longitude",
+        "fr": "Longitude du centre",
+        "de": "Längengrad des Mittelpunkts",
+        "es": "Longitud del centro"
+      },
+      "description": {
+        "en": "Decimal degrees, east positive.",
+        "fr": "Degrés décimaux, positifs à l'est.",
+        "de": "Dezimalgrad, Osten positiv.",
+        "es": "Grados decimales, positivos al este."
+      },
+      "placeholder": {
+        "en": "e.g. 1.4440",
+        "fr": "ex. 1,4440",
+        "de": "z. B. 1.4440",
+        "es": "p. ej. 1.4440"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "refresh_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Fréquence de mise à jour",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "Every feed is read this often. 5 minutes at least: the feeds are public services.",
+        "fr": "Chaque flux est lu à ce rythme. 5 minutes au moins : les flux sont des services publics.",
+        "de": "Jeder Feed wird so oft gelesen. Mindestens 5 Minuten: Die Feeds sind öffentliche Dienste.",
+        "es": "Cada feed se lee con esta frecuencia. 5 minutos como mínimo: los feeds son servicios públicos."
+      },
+      "required": false,
+      "default": "10",
+      "options": [
+        {
+          "value": "5",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        },
+        {
+          "value": "10",
+          "label": {
+            "en": "10 minutes",
+            "fr": "10 minutes",
+            "de": "10 Minuten",
+            "es": "10 minutos"
+          }
+        },
+        {
+          "value": "15",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 minutes",
+            "fr": "30 minutes",
+            "de": "30 Minuten",
+            "es": "30 minutos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "60 minutes",
+            "fr": "60 minutes",
+            "de": "60 Minuten",
+            "es": "60 minutos"
+          }
+        }
+      ]
+    },
+    {
+      "key": "max_age",
+      "type": "select",
+      "label": {
+        "en": "Maximum age of the events",
+        "fr": "Âge maximal des événements",
+        "de": "Höchstalter der Ereignisse",
+        "es": "Antigüedad máxima de los eventos"
+      },
+      "description": {
+        "en": "Older events are ignored. Events without a readable date are kept.",
+        "fr": "Les événements plus anciens sont ignorés. Ceux sans date lisible sont gardés.",
+        "de": "Ältere Ereignisse werden ignoriert. Ereignisse ohne lesbares Datum bleiben.",
+        "es": "Se ignoran los eventos más antiguos. Se conservan los que no tienen fecha legible."
+      },
+      "required": false,
+      "default": "0",
+      "options": [
+        {
+          "value": "0",
+          "label": {
+            "en": "Any age",
+            "fr": "Tout âge",
+            "de": "Beliebiges Alter",
+            "es": "Cualquier antigüedad"
+          }
+        },
+        {
+          "value": "1",
+          "label": {
+            "en": "1 hour",
+            "fr": "1 heure",
+            "de": "1 Stunde",
+            "es": "1 hora"
+          }
+        },
+        {
+          "value": "6",
+          "label": {
+            "en": "6 hours",
+            "fr": "6 heures",
+            "de": "6 Stunden",
+            "es": "6 horas"
+          }
+        },
+        {
+          "value": "24",
+          "label": {
+            "en": "24 hours",
+            "fr": "24 heures",
+            "de": "24 Stunden",
+            "es": "24 horas"
+          }
+        },
+        {
+          "value": "72",
+          "label": {
+            "en": "3 days",
+            "fr": "3 jours",
+            "de": "3 Tage",
+            "es": "3 días"
+          }
+        },
+        {
+          "value": "168",
+          "label": {
+            "en": "7 days",
+            "fr": "7 jours",
+            "de": "7 Tage",
+            "es": "7 días"
+          }
+        },
+        {
+          "value": "720",
+          "label": {
+            "en": "30 days",
+            "fr": "30 jours",
+            "de": "30 Tage",
+            "es": "30 días"
+          }
+        }
+      ]
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the texts",
+        "fr": "Langue des textes",
+        "de": "Sprache der Texte",
+        "es": "Idioma de los textos"
+      },
+      "description": {
+        "en": "Names of the devices and features (at their creation) and texts sent to the scenes.",
+        "fr": "Noms des appareils et fonctionnalités (à leur création) et textes envoyés aux scènes.",
+        "de": "Namen der Geräte und Funktionen (bei ihrer Erstellung) und Texte für die Szenen.",
+        "es": "Nombres de los dispositivos y funciones (al crearlos) y textos enviados a las escenas."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
+    },
+    {
+      "key": "about",
+      "type": "section",
+      "label": {
+        "en": "Sources and limits",
+        "fr": "Sources et limites",
+        "de": "Quellen und Grenzen",
+        "es": "Fuentes y límites"
+      },
+      "description": {
+        "en": "The data belong to the publisher of each feed: respect its terms of use. A complement, not a safety alert system: follow the instructions of your local authorities.",
+        "fr": "Les données appartiennent à l'éditeur de chaque flux : respectez ses conditions d'utilisation. Un complément, pas un système d'alerte de sécurité : suivez les consignes des autorités locales.",
+        "de": "Die Daten gehören dem Herausgeber jedes Feeds: Beachte seine Nutzungsbedingungen. Eine Ergänzung, kein Sicherheitswarnsystem: Befolge die Anweisungen deiner örtlichen Behörden.",
+        "es": "Los datos pertenecen al editor de cada feed: respete sus condiciones de uso. Un complemento, no un sistema de alerta de seguridad: siga las instrucciones de sus autoridades locales."
+      }
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "check_now",
+      "label": {
+        "en": "Read the feeds now",
+        "fr": "Lire les flux maintenant",
+        "de": "Feeds jetzt lesen",
+        "es": "Leer los feeds ahora"
+      },
+      "timeout_seconds": 120
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "new_event",
+      "label": {
+        "en": "Geo feed: new event in the area",
+        "fr": "Flux géolocalisé : nouvel événement dans la zone",
+        "de": "Geo-Feed: neues Ereignis im Gebiet",
+        "es": "Feed geolocalizado: nuevo evento en la zona"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "An event of a feed enters the followed area (radius, age, categories and minimum value of the feed).",
+        "fr": "Un événement d'un flux entre dans la zone suivie (rayon, âge, catégories et valeur minimale du flux).",
+        "de": "Ein Ereignis eines Feeds tritt in das verfolgte Gebiet ein (Radius, Alter, Kategorien und Mindestwert des Feeds).",
+        "es": "Un evento de un feed entra en la zona seguida (radio, antigüedad, categorías y valor mínimo del feed)."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "feed",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
+          "label": {
+            "en": "Feed (empty: any)",
+            "fr": "Flux (vide : n'importe lequel)",
+            "de": "Feed (leer: beliebig)",
+            "es": "Feed (vacío: cualquiera)"
+          },
+          "required": false
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "feed_name",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Feed name",
+            "fr": "Nom du flux",
+            "de": "Name des Feeds",
+            "es": "Nombre del feed"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "category",
+          "type": "string",
+          "label": {
+            "en": "Category",
+            "fr": "Catégorie",
+            "de": "Kategorie",
+            "es": "Categoría"
+          }
+        },
+        {
+          "key": "distance_km",
+          "type": "number",
+          "label": {
+            "en": "Distance (km)",
+            "fr": "Distance (km)",
+            "de": "Entfernung (km)",
+            "es": "Distancia (km)"
+          }
+        },
+        {
+          "key": "value",
+          "type": "number",
+          "label": {
+            "en": "Value of the numeric property",
+            "fr": "Valeur de la propriété numérique",
+            "de": "Wert der Zahlen-Eigenschaft",
+            "es": "Valor de la propiedad numérica"
+          }
+        },
+        {
+          "key": "time",
+          "type": "string",
+          "label": {
+            "en": "Date (ISO 8601)",
+            "fr": "Date (ISO 8601)",
+            "de": "Datum (ISO 8601)",
+            "es": "Fecha (ISO 8601)"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "Link",
+            "fr": "Lien",
+            "de": "Link",
+            "es": "Enlace"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary (title and distance)",
+            "fr": "Résumé (titre et distance)",
+            "de": "Zusammenfassung (Titel und Entfernung)",
+            "es": "Resumen (título y distancia)"
+          }
+        },
+        {
+          "key": "latitude",
+          "type": "number",
+          "label": {
+            "en": "Latitude",
+            "fr": "Latitude",
+            "de": "Breitengrad",
+            "es": "Latitud"
+          }
+        },
+        {
+          "key": "longitude",
+          "type": "number",
+          "label": {
+            "en": "Longitude",
+            "fr": "Longitude",
+            "de": "Längengrad",
+            "es": "Longitud"
+          }
+        },
+        {
+          "key": "properties",
+          "type": "string",
+          "label": {
+            "en": "Properties (JSON)",
+            "fr": "Propriétés (JSON)",
+            "de": "Eigenschaften (JSON)",
+            "es": "Propiedades (JSON)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "event_removed",
+      "label": {
+        "en": "Geo feed: event removed",
+        "fr": "Flux géolocalisé : événement disparu",
+        "de": "Geo-Feed: Ereignis entfernt",
+        "es": "Feed geolocalizado: evento desaparecido"
+      },
+      "description": {
+        "en": "A followed event leaves the feed, or no longer matches the area (too old, moved away).",
+        "fr": "Un événement suivi disparaît du flux, ou ne correspond plus à la zone (trop ancien, éloigné).",
+        "de": "Ein verfolgtes Ereignis verschwindet aus dem Feed oder passt nicht mehr zum Gebiet (zu alt, entfernt).",
+        "es": "Un evento seguido desaparece del feed o ya no corresponde a la zona (demasiado antiguo, alejado)."
+      },
+      "fields": [
+        {
+          "key": "feed",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Feed (empty: any)",
+            "fr": "Flux (vide : n'importe lequel)",
+            "de": "Feed (leer: beliebig)",
+            "es": "Feed (vacío: cualquiera)"
+          },
+          "required": false
+        }
+      ],
+      "variables": [
+        {
+          "key": "feed_name",
+          "type": "string",
+          "label": {
+            "en": "Feed name",
+            "fr": "Nom du flux",
+            "de": "Name des Feeds",
+            "es": "Nombre del feed"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "category",
+          "type": "string",
+          "label": {
+            "en": "Category",
+            "fr": "Catégorie",
+            "de": "Kategorie",
+            "es": "Categoría"
+          }
+        },
+        {
+          "key": "distance_km",
+          "type": "number",
+          "label": {
+            "en": "Distance (km)",
+            "fr": "Distance (km)",
+            "de": "Entfernung (km)",
+            "es": "Distancia (km)"
+          }
+        },
+        {
+          "key": "value",
+          "type": "number",
+          "label": {
+            "en": "Value of the numeric property",
+            "fr": "Valeur de la propriété numérique",
+            "de": "Wert der Zahlen-Eigenschaft",
+            "es": "Valor de la propiedad numérica"
+          }
+        },
+        {
+          "key": "time",
+          "type": "string",
+          "label": {
+            "en": "Date (ISO 8601)",
+            "fr": "Date (ISO 8601)",
+            "de": "Datum (ISO 8601)",
+            "es": "Fecha (ISO 8601)"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "Link",
+            "fr": "Lien",
+            "de": "Link",
+            "es": "Enlace"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary (title and distance)",
+            "fr": "Résumé (titre et distance)",
+            "de": "Zusammenfassung (Titel und Entfernung)",
+            "es": "Resumen (título y distancia)"
+          }
+        },
+        {
+          "key": "latitude",
+          "type": "number",
+          "label": {
+            "en": "Latitude",
+            "fr": "Latitude",
+            "de": "Breitengrad",
+            "es": "Latitud"
+          }
+        },
+        {
+          "key": "longitude",
+          "type": "number",
+          "label": {
+            "en": "Longitude",
+            "fr": "Longitude",
+            "de": "Längengrad",
+            "es": "Longitud"
+          }
+        },
+        {
+          "key": "properties",
+          "type": "string",
+          "label": {
+            "en": "Properties (JSON)",
+            "fr": "Propriétés (JSON)",
+            "de": "Eigenschaften (JSON)",
+            "es": "Propiedades (JSON)"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "read_events",
+      "label": {
+        "en": "Geo feed: read the events",
+        "fr": "Flux géolocalisé : lire les événements",
+        "de": "Geo-Feed: Ereignisse lesen",
+        "es": "Feed geolocalizado: leer los eventos"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "The events of your area as one sentence, nearest first, to send by message or read aloud.",
+        "fr": "Les événements de votre zone en une phrase, du plus proche au plus lointain, à envoyer ou lire à voix haute.",
+        "de": "Die Ereignisse deines Gebiets als ein Satz, die nächsten zuerst, zum Senden oder Vorlesen.",
+        "es": "Los eventos de su zona en una frase, del más cercano al más lejano, para enviar o leer en voz alta."
+      },
+      "timeout_seconds": 120,
       "fields": [
         {
-          "key": "device",
+          "key": "feed",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Feed (empty: any)",
+            "fr": "Flux (vide : n'importe lequel)",
+            "de": "Feed (leer: beliebig)",
+            "es": "Feed (vacío: cualquiera)"
+          },
+          "required": false
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "text",
+          "type": "string",
+          "label": {
+            "en": "Events, in one sentence",
+            "fr": "Événements, en une phrase",
+            "de": "Ereignisse, in einem Satz",
+            "es": "Eventos, en una frase"
+          }
+        },
+        {
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Number of events",
+            "fr": "Nombre d'événements",
+            "de": "Anzahl der Ereignisse",
+            "es": "Número de eventos"
+          }
+        },
+        {
+          "key": "nearest_km",
+          "type": "number",
+          "label": {
+            "en": "Nearest distance (km, 20038 if none)",
+            "fr": "Distance la plus proche (km, 20038 si aucun)",
+            "de": "Nächste Entfernung (km, 20038 wenn keins)",
+            "es": "Distancia más cercana (km, 20038 si ninguno)"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "events",
+      "label": {
+        "en": "Geo feed events",
+        "fr": "Événements géolocalisés",
+        "de": "Geo-Feed-Ereignisse",
+        "es": "Eventos geolocalizados"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Current events per feed, then the nearest ones with their distance.",
+        "fr": "Événements en cours par flux, puis les plus proches avec leur distance.",
+        "de": "Aktuelle Ereignisse pro Feed, dann die nächsten mit ihrer Entfernung.",
+        "es": "Eventos actuales por feed, luego los más cercanos con su distancia."
+      },
+      "icon": "map-pin",
+      "settings": [
+        {
+          "key": "feeds",
+          "type": "multi_select",
+          "source": "devices",
+          "label": {
+            "en": "Feeds (empty: all)",
+            "fr": "Flux (vide : tous)",
+            "de": "Feeds (leer: alle)",
+            "es": "Feeds (vacío: todos)"
+          },
+          "description": {
+            "en": "Only the devices added to Gladys can be chosen.",
+            "fr": "Seuls les appareils ajoutés à Gladys se choisissent.",
+            "de": "Nur die in Gladys angelegten Geräte sind wählbar.",
+            "es": "Solo se pueden elegir los dispositivos añadidos a Gladys."
+          },
+          "required": false
+        }
+      ]
     }
   ]
 }
