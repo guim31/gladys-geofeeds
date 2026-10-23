@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-23
+
 ### Added
 
 - Up to five located event feeds: GeoJSON, GeoRSS (Simple and GML), W3C geo,
@@ -26,4 +28,5 @@ the notes of the version's GitHub Release.
 - Dashboard widget: the current events per feed, then the nearest ones.
 - Texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-geofeeds/commits/main
+[Unreleased]: https://github.com/guim31/gladys-geofeeds/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-geofeeds/releases/tag/v1.0.0
